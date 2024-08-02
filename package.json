@@ -10,7 +10,7 @@
     "test": "jest"
   },
   "keywords": ["comment", "uncomment", "regex", "shelljs", "code", "line"],
-  "author": "Your Name",
+  "author": "Hansel Wei",
   "license": "Apache-2.0",
   "dependencies": {
     "shelljs": "^0.8.5"
