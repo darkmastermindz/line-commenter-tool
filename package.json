@@ -6,10 +6,16 @@
   "bin": {
     "line-commenter-tool": "./bin/line-commenter-tool.js"
   },
+  "scripts": {
+    "test": "jest"
+  },
   "keywords": ["comment", "uncomment", "regex", "shelljs", "code", "line"],
   "author": "Your Name",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "dependencies": {
     "shelljs": "^0.8.5"
+  },
+  "devDependencies": {
+    "jest": "^29.6.1"
   }
 }
