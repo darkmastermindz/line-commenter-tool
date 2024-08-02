@@ -1,0 +1,15 @@
+{
+  "name": "line-commenter-tool",
+  "version": "1.0.0",
+  "description": "A tool to comment or uncomment lines in a file based on regex patterns and specific strings.",
+  "main": "src/index.js",
+  "bin": {
+    "line-commenter-tool": "./bin/line-commenter-tool.js"
+  },
+  "keywords": ["comment", "uncomment", "regex", "shelljs", "code", "line"],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "shelljs": "^0.8.5"
+  }
+}
