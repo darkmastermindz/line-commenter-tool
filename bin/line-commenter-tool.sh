@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: line-commenter-tool <action> <filename> <regexPattern> <string1,string2,...>
+# Usage: line-commenter-tool.sh <action> <filename> <regexPattern> <string1,string2,...>
 
 # Check arguments
 if [ "$#" -lt 4 ]; then
@@ -36,48 +36,41 @@ function get_comment_symbol {
 }
 
 COMMENT_SYMBOL=$(get_comment_symbol "$FILENAME")
+START_COMMENT=${COMMENT_SYMBOL% *}
+END_COMMENT=${COMMENT_SYMBOL#* }
 
-# Process file
-while IFS= read -r line; do
-    ORIGINAL_LINE="$line"
-    line=$(echo "$line" | sed -e 's/^[[:space:]]*//')  # Trim leading spaces
+# Read the entire file content
+CONTENT=$(<"$FILENAME")
 
-    COMMENT=$(echo "$line" | grep -oE "^$COMMENT_SYMBOL[[:space:]]*")
+# Define the function to escape special characters for use in sed
+function escape_sed {
+    echo "$1" | sed -e 's/[\/&]/\\&/g'
+}
 
-    case $COMMENT_SYMBOL in
-        "//"|"#")
-            if [[ "$ACTION" == "comment" ]]; then
-                if [[ -z "$COMMENT" && ($line =~ $REGEX_PATTERN || $(echo "${STRINGS[@]}" | grep -qF "$line")) ]]; then
-                    echo "$COMMENT_SYMBOL $ORIGINAL_LINE"
-                else
-                    echo "$ORIGINAL_LINE"
-                fi
-            elif [[ "$ACTION" == "uncomment" ]]; then
-                if [[ -n "$COMMENT" ]]; then
-                    echo "${line#$COMMENT_SYMBOL }"
-                else
-                    echo "$ORIGINAL_LINE"
-                fi
-            fi
-            ;;
-        "<!-- -->"|"/* */")
-            if [[ "$ACTION" == "comment" ]]; then
-                if [[ $line != "<!--"* && $line != "/*"* && ($line =~ $REGEX_PATTERN || $(echo "${STRINGS[@]}" | grep -qF "$line")) ]]; then
-                    echo "${COMMENT_SYMBOL% *} $ORIGINAL_LINE ${COMMENT_SYMBOL#* }"
-                else
-                    echo "$ORIGINAL_LINE"
-                fi
-            elif [[ "$ACTION" == "uncomment" ]]; then
-                if [[ $line == "<!--"* || $line == "/*"* ]]; then
-                    line=$(echo "$line" | sed -e "s/^${COMMENT_SYMBOL% *}[[:space:]]*//" -e "s/[[:space:]]*${COMMENT_SYMBOL#* }$//")
-                    echo "$line"
-                else
-                    echo "$ORIGINAL_LINE"
-                fi
-            fi
-            ;;
-        *)
-            echo "$ORIGINAL_LINE"
-            ;;
-    esac
-done < "$FILENAME"
+# Process the file content
+if [[ "$ACTION" == "comment" ]]; then
+    for STRING in "${STRINGS[@]}"; do
+        STRING=$(escape_sed "$STRING")
+        if [[ "$COMMENT_SYMBOL" == "<!-- -->" || "$COMMENT_SYMBOL" == "/* */" ]]; then
+            CONTENT=$(echo "$CONTENT" | sed -E "s/^(.*$STRING.*)$/$(escape_sed "$START_COMMENT") \1 $(escape_sed "$END_COMMENT")/")
+        else
+            CONTENT=$(echo "$CONTENT" | sed -E "s/^(.*$STRING.*)$/$(escape_sed "$START_COMMENT") \1/")
+        fi
+    done
+    if [[ "$REGEX_PATTERN" != "" ]]; then
+        if [[ "$COMMENT_SYMBOL" == "<!-- -->" || "$COMMENT_SYMBOL" == "/* */" ]]; then
+            CONTENT=$(echo "$CONTENT" | sed -E "s/($REGEX_PATTERN)/$(escape_sed "$START_COMMENT") \1 $(escape_sed "$END_COMMENT")/")
+        else
+            CONTENT=$(echo "$CONTENT" | sed -E "s/($REGEX_PATTERN)/$(escape_sed "$START_COMMENT") \1/")
+        fi
+    fi
+elif [[ "$ACTION" == "uncomment" ]]; then
+    if [[ "$COMMENT_SYMBOL" == "<!-- -->" || "$COMMENT_SYMBOL" == "/* */" ]]; then
+        CONTENT=$(echo "$CONTENT" | sed -E "s/^$(escape_sed "$START_COMMENT") (.*) $(escape_sed "$END_COMMENT")$/\1/")
+    else
+        CONTENT=$(echo "$CONTENT" | sed -E "s/^$(escape_sed "$START_COMMENT") (.*)$/\1/")
+    fi
+fi
+
+# Output the modified content back to the file
+echo "$CONTENT" > "$FILENAME"
