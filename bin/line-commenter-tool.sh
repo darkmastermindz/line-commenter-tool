@@ -66,9 +66,9 @@ if [[ "$ACTION" == "comment" ]]; then
     fi
 elif [[ "$ACTION" == "uncomment" ]]; then
     if [[ "$COMMENT_SYMBOL" == "<!-- -->" || "$COMMENT_SYMBOL" == "/* */" ]]; then
-        CONTENT=$(echo "$CONTENT" | sed -E "s/^([[:space:]]*)$(escape_sed "$START_COMMENT")[[:space:]]+(.*)[[:space:]]+$(escape_sed "$END_COMMENT")/\1\2/g")
+        CONTENT=$(echo "$CONTENT" | sed -E "s/^([[:space:]]*)$(escape_sed "$START_COMMENT")[[:space:]]+(.*)[[:space:]]+$(escape_sed "$END_COMMENT")/\1\2/")
     else
-        CONTENT=$(echo "$CONTENT" | sed -E "s/^([[:space:]]*)$(escape_sed "$START_COMMENT")[[:space:]]+(.*)/\1\2/g")
+        CONTENT=$(echo "$CONTENT" | sed -E "s/^([[:space:]]*)$(escape_sed "$START_COMMENT")[[:space:]]+(.*)/\1\2/")
     fi
 fi
 
