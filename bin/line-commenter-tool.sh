@@ -52,23 +52,23 @@ if [[ "$ACTION" == "comment" ]]; then
     for STRING in "${STRINGS[@]}"; do
         STRING=$(escape_sed "$STRING")
         if [[ "$COMMENT_SYMBOL" == "<!-- -->" || "$COMMENT_SYMBOL" == "/* */" ]]; then
-            CONTENT=$(echo "$CONTENT" | sed -E "s/^(.*$STRING.*)$/$(escape_sed "$START_COMMENT") \1 $(escape_sed "$END_COMMENT")/")
+            CONTENT=$(echo "$CONTENT" | sed -E "/^[[:space:]]*$(escape_sed "$START_COMMENT").*$(escape_sed "$END_COMMENT")/!s/^([[:space:]]*$STRING.*)$/$(escape_sed "$START_COMMENT") \1 $(escape_sed "$END_COMMENT")/")
         else
-            CONTENT=$(echo "$CONTENT" | sed -E "s/^(.*$STRING.*)$/$(escape_sed "$START_COMMENT") \1/")
+            CONTENT=$(echo "$CONTENT" | sed -E "/^[[:space:]]*$(escape_sed "$START_COMMENT")/!s/^([[:space:]]*$STRING.*)$/$(escape_sed "$START_COMMENT") \1/")
         fi
     done
     if [[ "$REGEX_PATTERN" != "" ]]; then
         if [[ "$COMMENT_SYMBOL" == "<!-- -->" || "$COMMENT_SYMBOL" == "/* */" ]]; then
-            CONTENT=$(echo "$CONTENT" | sed -E "s/($REGEX_PATTERN)/$(escape_sed "$START_COMMENT") \1 $(escape_sed "$END_COMMENT")/")
+            CONTENT=$(echo "$CONTENT" | sed -E "/^[[:space:]]*$(escape_sed "$START_COMMENT").*$(escape_sed "$END_COMMENT")/!s/^([[:space:]]*($REGEX_PATTERN))/$(escape_sed "$START_COMMENT") \1 $(escape_sed "$END_COMMENT")/")
         else
-            CONTENT=$(echo "$CONTENT" | sed -E "s/($REGEX_PATTERN)/$(escape_sed "$START_COMMENT") \1/")
+            CONTENT=$(echo "$CONTENT" | sed -E "/^[[:space:]]*$(escape_sed "$START_COMMENT")/!s/^([[:space:]]*($REGEX_PATTERN))/$(escape_sed "$START_COMMENT") \1/")
         fi
     fi
 elif [[ "$ACTION" == "uncomment" ]]; then
     if [[ "$COMMENT_SYMBOL" == "<!-- -->" || "$COMMENT_SYMBOL" == "/* */" ]]; then
-        CONTENT=$(echo "$CONTENT" | sed -E "s/^$(escape_sed "$START_COMMENT") (.*) $(escape_sed "$END_COMMENT")$/\1/")
+        CONTENT=$(echo "$CONTENT" | sed -E "s/^([[:space:]]*)$(escape_sed "$START_COMMENT")[[:space:]]+(.*)[[:space:]]+$(escape_sed "$END_COMMENT")/\1\2/g")
     else
-        CONTENT=$(echo "$CONTENT" | sed -E "s/^$(escape_sed "$START_COMMENT") (.*)$/\1/")
+        CONTENT=$(echo "$CONTENT" | sed -E "s/^([[:space:]]*)$(escape_sed "$START_COMMENT")[[:space:]]+(.*)/\1\2/g")
     fi
 fi
 
