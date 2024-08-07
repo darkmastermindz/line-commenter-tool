@@ -17,7 +17,7 @@ We take the security of our project seriously. If you discover a security vulner
 
 ### How to Report
 
-- **Email**: Please send your report to our security team at [security@example.com](mailto:oss+security@hanselwei.dev).
+- **Email**: Please send your report to our security team at [oss+security@hanselwei.dev](mailto:oss+security@hanselwei.dev).
 - **Information**: Provide a clear description of the vulnerability, including any steps to reproduce it.
 
 ### What to Expect
