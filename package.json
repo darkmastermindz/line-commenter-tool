@@ -4,7 +4,8 @@
   "description": "A tool to comment or uncomment lines in a file based on regex patterns and specific strings.",
   "main": "src/index.js",
   "bin": {
-    "line-commenter-tool": "./bin/line-commenter-tool.js"
+    "line-commenter-tool": "./bin/line-commenter-tool.js",
+    "line-commenter-tool-sh": "./line-commenter-tool.sh"
   },
   "scripts": {
     "test": "jest"
