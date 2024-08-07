@@ -10,6 +10,11 @@
   "scripts": {
     "test": "jest"
   },
+  "files": [
+    "bin/",
+    "src/",
+    "line-commenter-tool.sh"
+  ],
   "keywords": ["comment", "uncomment", "regex", "shelljs", "code", "line"],
   "author": "Hansel Wei",
   "license": "Apache-2.0",
