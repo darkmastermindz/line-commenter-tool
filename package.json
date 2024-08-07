@@ -12,8 +12,7 @@
   },
   "files": [
     "bin/",
-    "src/",
-    "line-commenter-tool.sh"
+    "src/"
   ],
   "keywords": ["comment", "uncomment", "regex", "shelljs", "code", "line"],
   "author": "Hansel Wei",
