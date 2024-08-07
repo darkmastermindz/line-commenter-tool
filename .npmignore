@@ -1,3 +1,4 @@
+.github/
 tests/
 *.test.js
 *.spec.js
