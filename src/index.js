@@ -1,7 +1,7 @@
-var shell = require('shelljs');
+import shell from 'shelljs';
 
 // Mapping of file extensions to comment symbols
-var supportedExtensions = {
+const supportedExtensions = {
   '.js': '//',
   '.jsx': '//',
   '.ts': '//',
@@ -23,90 +23,92 @@ var supportedExtensions = {
   '.xml': '<!--',         // XML comments
   '.yml': '#',            // YAML comments
   '.yaml': '#',           // YAML comments
-  '.json': '//',          // JSON comments (unofficial)
-  '.jsonc': '//',         // JSON with comments
   'Dockerfile': '#',      // Dockerfile comments
   '.md': '<!--',          // Markdown with HTML comments
-  // Add more mappings as needed
 };
 
 function getCommentSymbol(filename) {
-  // Extract the file extension by finding the last dot in the filename
-  var ext = filename.indexOf('.') !== -1 ? filename.substring(filename.lastIndexOf('.')) : '';
-  // Special case for Dockerfile, which has no extension
-  if (filename === 'Dockerfile') {
-    return supportedExtensions['Dockerfile'];
-  }
-  return supportedExtensions[ext] || '//'; // Default to '//' if not found
+  const ext = Object.keys(supportedExtensions).find(ext => filename.endsWith(ext));
+  return supportedExtensions[ext];
+}
+
+function escapeRegex(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function processFile(action, filename, regexPattern, stringsArray) {
-  var regex = new RegExp(regexPattern);
-  var strings = stringsArray.split(',');
+  const commentSymbol = getCommentSymbol(filename);
 
-  // Determine the comment symbol based on file type
-  var commentSymbol = getCommentSymbol(filename);
-  var endCommentSymbol = commentSymbol === '<!--' ? '-->' : (commentSymbol === '/*' ? '*/' : '');
+  if (!commentSymbol) {
+    console.error(`Unsupported file type for '${filename}'. No comment symbol found.`);
+    return;
+  }
 
-  // Read the file using shelljs
-  var fileContent = shell.cat(filename).stdout;
-  var lines = fileContent.split('\n');
+  const endCommentSymbol = commentSymbol === '<!--' ? '-->' : (commentSymbol === '/*' ? '*/' : '');
 
-  var processedLines = lines.map(function(line) {
-    var containsString = strings.some(function(str) {
-      return line.indexOf(str) !== -1;
-    });
+  // Escape the regex pattern to prevent injection
+  const escapedPattern = escapeRegex(regexPattern);
+  const regex = new RegExp(escapedPattern);
+  const strings = stringsArray.split(',');
 
-    // Split the line at the first occurrence of the comment symbol to preserve inline comments
-    var commentIndex = line.indexOf(commentSymbol);
-    if (commentIndex === -1) {
-      commentIndex = line.indexOf('#'); // For hash-based comments
+  // Check if the file exists
+  if (!shell.test('-f', filename)) {
+    console.error(`File not found: '${filename}'`);
+    return;
+  }
+
+  // Read the file content using shelljs
+  const fileContent = shell.cat(filename).stdout;
+  const lines = fileContent.split('\n');
+
+  const processedLines = lines.map(line => {
+    const containsString = strings.some(str => line.includes(str));
+
+    // Match leading whitespace
+    const leadingWhitespaceMatch = line.match(/^\s*/);
+    const leadingWhitespace = leadingWhitespaceMatch ? leadingWhitespaceMatch[0] : '';
+
+    // Identify comment parts of the line
+    const commentIndex = line.indexOf(commentSymbol);
+    const mainPart = commentIndex > -1 ? line.substring(leadingWhitespace.length + commentSymbol.length).trim() : line.trim();
+    const inlineComment = commentIndex > -1 ? line.substring(commentIndex) : '';
+
+    let isCommented = commentIndex === leadingWhitespace.length;
+
+    if (commentSymbol && inlineComment.trim().startsWith(commentSymbol)) {
+      isCommented = true;
     }
-    if (commentIndex === -1) {
-      commentIndex = line.indexOf('<!--'); // For HTML comments
-    }
-    var mainPart = commentIndex > -1 ? line.substring(0, commentIndex).trim() : line.trim();
-    var inlineComment = commentIndex > -1 ? line.substring(commentIndex) : '';
 
-    // Determine how many comment symbols are present at the start of the main part
-    var commentLevel = 0;
-    var tempLine = mainPart;
-    while (tempLine.indexOf(commentSymbol) === 0) {
-      commentLevel++;
-      tempLine = tempLine.slice(commentSymbol.length).trim();
-    }
-
-    // Check if the main part is already commented
-    var isCommented = commentLevel > 0;
-
-    if (action === 'comment') {
-      if ((regex.test(mainPart) || containsString) && !isCommented) {
-        // Add an additional layer of comments to the main part
-        if (commentSymbol === '<!--' || commentSymbol === '/*') {
-          return commentSymbol + ' ' + mainPart.trim() + ' ' + endCommentSymbol + ' ' + inlineComment;
-        }
-        return commentSymbol + ' ' + mainPart + ' ' + inlineComment;
+    if (action === 'comment' && (regex.test(mainPart) || containsString) && !isCommented) {
+      if (commentSymbol === '<!--' || commentSymbol === '/*') {
+        return `${leadingWhitespace}${commentSymbol} ${mainPart} ${endCommentSymbol} ${inlineComment}`.trim();
       }
-    } else if (action === 'uncomment') {
-      if (isCommented) {
-        if (commentSymbol === '<!--' || commentSymbol === '/*') {
-          // Remove one layer of block comments from the main part
-          var startRegex = new RegExp('^\\s*' + commentSymbol + '\\s*');
-          var endRegex = new RegExp('\\s*' + endCommentSymbol + '\\s*$');
-          mainPart = mainPart.replace(startRegex, '').replace(endRegex, '').trim();
-        } else {
-          // Remove one level of single-line comments from the main part
-          mainPart = mainPart.slice(commentSymbol.length).trim();
-        }
-        return mainPart + ' ' + inlineComment;
+      return `${leadingWhitespace}${commentSymbol} ${mainPart} ${inlineComment}`.trim();
+    } else if (action === 'uncomment' && isCommented) {
+      // Only remove the comment at the start of the line
+      if (commentSymbol === '<!--' || commentSymbol === '/*') {
+        const startRegex = new RegExp(`^\\s*${escapeRegex(commentSymbol)}\\s*`);
+        const endRegex = new RegExp(`\\s*${escapeRegex(endCommentSymbol)}\\s*$`);
+        const cleanedPart = mainPart.replace(startRegex, '').replace(endRegex, '').trim();
+        return `${leadingWhitespace}${cleanedPart} ${inlineComment}`.trim();
       }
+      const cleanedPart = line.slice(leadingWhitespace.length + commentSymbol.length).trim();
+      return `${leadingWhitespace}${cleanedPart} ${inlineComment}`.trim();
     }
     return line;
   });
 
   // Write back to the file using shelljs
   shell.ShellString(processedLines.join('\n')).to(filename);
-  console.log("Lines have been processed in '" + filename + "' with action '" + action + "'.");
+  console.log(`Lines have been processed in '${filename}' with action '${action}'.`);
 }
 
-module.exports = processFile;
+// Command-line arguments
+const [action, filename, regexPattern, stringsArray] = process.argv.slice(2);
+
+if (!action || !filename || !regexPattern || !stringsArray) {
+  console.error('Usage: node index.js <action> <filename> <regexPattern> <string1,string2,...>');
+  process.exit(1);
+}
+
+processFile(action, filename, regexPattern, stringsArray);
