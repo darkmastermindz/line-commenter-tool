@@ -15,14 +15,7 @@
     "bin/",
     "src/"
   ],
-  "keywords": [
-    "comment",
-    "uncomment",
-    "regex",
-    "shelljs",
-    "code",
-    "line"
-  ],
+  "keywords": ["comment", "uncomment", "regex", "shelljs", "code", "line", "cli", "dx", "developer", "tool"],
   "author": "Hansel Wei",
   "license": "Apache-2.0",
   "devDependencies": {
