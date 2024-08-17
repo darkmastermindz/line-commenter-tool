@@ -1,0 +1,20 @@
+/* Comment block start
+ * Multiple lines of comments
+ * Comment block end */
+
+/* .class { color: red; } */
+
+/* Another comment block
+ * This is a nested comment
+ */
+
+/* Regular CSS rules */
+body {
+    background-color: #f0f0f0;
+}
+
+.class {
+    color: blue;
+}
+
+/* End of CSS file */

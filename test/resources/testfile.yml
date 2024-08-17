@@ -1,0 +1,8 @@
+# YAML comment at the start
+active: true  # Inline comment in YAML
+## Nested comment level 2 in YAML
+items:
+  - name: Item1  # Comment with key-value
+  - name: Item2
+  # - name: Commented out item
+# Ending comment in YAML
