@@ -19,12 +19,13 @@ You can install this package globally or locally in your project.
 
 ```bash
 npm install -g line-commenter-tool
+npm line-commenter-tool --help
 ```
 
-### Local Installation
+### Run with npx without installation
 
 ```bash
-npm install line-commenter-tool
+npx line-commenter-tool --help
 ```
 
 ## Usage
