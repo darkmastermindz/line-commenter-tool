@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import chalk from 'chalk';
-import processFile from '../src/index.js';
+import processFile, { escapeRegExp } from '../src/index.js';
 import { readFile } from 'fs/promises';
 import { resolve } from 'path';
 
@@ -104,7 +104,8 @@ ${format.usage('Notes:')}
 
     try {
         const options = { silent, multiline };
-        await processFile(action, filename, regexPattern, strings, options);
+        const sanitizedRegexPattern = escapeRegExp(regexPattern);
+        await processFile(action, filename, sanitizedRegexPattern, strings, options);
         if (!silent) {
             console.log(format.success(filename));
         }
