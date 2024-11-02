@@ -54,12 +54,12 @@ export async function processFile(action, filename, regexPattern, strings, optio
         };
 
         const processPythonComment = (safeRegexPattern) => {
-            const regex = new RegExp(`^\\s*${safeRegexPattern}`, 'gm');
-            content = content.replace(regex, (match) => {
-                if (match.trimStart().startsWith(commentSymbol)) {
+            const regex = new RegExp(`^(\s*)(.*?)(${safeRegexPattern})(.*)$`, 'gm');
+            content = content.replace(regex, (match, p1, p2, p3, p4) => {
+                if (p2.trimStart().startsWith(commentSymbol)) {
                     return match;
                 }
-                return `${startComment} ${match}`;
+                return `${p1}${startComment} ${p2}${p3}${p4}`;
             });
         };
 
@@ -74,13 +74,13 @@ export async function processFile(action, filename, regexPattern, strings, optio
         const processStringComments = (strings, action) => {
             strings.forEach((string) => {
                 const escapedString = escapeRegExp(string);
-                const commentRegex = new RegExp(`^([\\s]*)${action === 'uncomment' ? startComment + '\\s*' : ''}(.*${escapedString}.*)$`, 'gm');
+                const commentRegex = new RegExp(`^([\s]*)${action === 'uncomment' ? startComment + '\s*' : ''}(.*${escapedString}.*)$`, 'gm');
                 processSingleLineComment(commentRegex, action);
             });
         };
 
         const processRegexComments = (safeRegexPattern, action) => {
-            const regexCommentRegex = new RegExp(`^([\\s]*)${action === 'uncomment' ? startComment + '\\s*' : ''}(.*${safeRegexPattern}.*)$`, 'gm');
+            const regexCommentRegex = new RegExp(`^([\s]*)${action === 'uncomment' ? startComment + '\s*' : ''}(.*${safeRegexPattern}.*)$`, 'gm');
             processSingleLineComment(regexCommentRegex, action);
         };
 
