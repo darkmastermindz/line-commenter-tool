@@ -34,14 +34,14 @@ export async function processFile(action, filename, regexPattern, strings, optio
         content = content.replace(/\r\n/g, '\n');
 
         const commentSymbol = getCommentSymbol(filename);
-        const startComment = escapeRegExp(commentSymbol.split(' ')[0]);
-        const endComment = commentSymbol.split(' ')[1] ? escapeRegExp(commentSymbol.split(' ')[1]) : '';
+        const startComment = commentSymbol.split(' ')[0];
+        const endComment = commentSymbol.split(' ')[1] ? commentSymbol.split(' ')[1] : '';
 
         const processSingleLineComment = (commentRegex, actionType) => {
             if (actionType === 'comment') {
                 content = content.replace(commentRegex, (match, p1, p2) => {
-                    // Prevent commenting lines that are already commented
-                    if (p2.trim().startsWith(commentSymbol)) {
+                    // Skip lines only if they already start with the comment symbol
+                    if (p2.trimStart().startsWith(commentSymbol)) {
                         return match;
                     }
                     return `${p1}${startComment} ${p2}`;
@@ -55,7 +55,7 @@ export async function processFile(action, filename, regexPattern, strings, optio
 
         const processMultilineBlockComment = (startPattern, endPattern, actionType) => {
             const blockCommentRegex = new RegExp(
-                `^([\\s]*)${startPattern}\\s*[\\s\\S]*?${endPattern}`,
+                new RegExp(`^([\\s]*)${startPattern}\\s*[\\S]*?${endPattern}`, 'gm'),
                 'gm'
             );
             if (actionType === 'comment') {
@@ -71,19 +71,32 @@ export async function processFile(action, filename, regexPattern, strings, optio
             }
         };
 
+        const processPythonMultilineStrings = (actionType) => {
+            const tripleQuoteRegex = /(["']{3})([\s\S]*?)\1/gm;
+            if (actionType === 'comment') {
+                content = content.replace(tripleQuoteRegex, (match, p1, p2) => {
+                    // Skip processing inside triple-quoted strings
+                    return match;
+                });
+            }
+        };
+
         if (action === 'comment' || action === 'uncomment') {
             if (multiline && endComment) {
                 // Handle multiline comments
                 if (regexPattern) {
-                    const startPattern = escapeRegExp(startComment);
-                    const endPattern = escapeRegExp(endComment);
+                    const startPattern = startComment;
+                    const endPattern = endComment;
                     processMultilineBlockComment(startPattern, endPattern, action);
                 }
             } else {
                 if (filename.endsWith('.py') && action === 'comment') {
+                    // Process Python multiline strings first to avoid modifying them
+                    processPythonMultilineStrings(action);
+
                     const regex = new RegExp(`^\\s*${regexPattern}`, 'gm');
                     content = content.replace(regex, (match) => {
-                        if (match.trim().startsWith(commentSymbol)) {
+                        if (match.trimStart().startsWith(commentSymbol)) {
                             return match;
                         }
                         return `${startComment} ${match}`;
@@ -104,8 +117,7 @@ export async function processFile(action, filename, regexPattern, strings, optio
                     }
 
                     if (regexPattern) {
-                        const escapedRegex = escapeRegExp(regexPattern);
-                        const regexCommentRegex = new RegExp(`^([\\s]*)${action === 'uncomment' ? startComment + '\\s*' : ''}(.*${escapedRegex}.*)$`, 'gm');
+                        const regexCommentRegex = new RegExp(`^([\\s]*)${action === 'uncomment' ? startComment + '\\s*' : ''}(.*${regexPattern}.*)$`, 'gm');
                         processSingleLineComment(regexCommentRegex, action);
                     }
                 }
