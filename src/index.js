@@ -94,7 +94,7 @@ export async function processFile(action, filename, regexPattern, strings, optio
                     // Process Python multiline strings first to avoid modifying them
                     processPythonMultilineStrings(action);
 
-                    const regex = new RegExp(`^\s*${regexPattern}`, 'gm');
+                    const regex = new RegExp(`^\\s*${regexPattern}`, 'gm');
                     content = content.replace(regex, (match) => {
                         if (match.trimStart().startsWith(commentSymbol)) {
                             return match;
