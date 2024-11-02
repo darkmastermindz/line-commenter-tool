@@ -1,5 +1,10 @@
 import fs from 'fs-extra';
 
+// Helper function to escape special characters for use in regex
+export function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // Main function to process the file
 export async function processFile(action, filename, regexPattern, strings, options = {}) {
     const { silent = false, multiline = false } = options;
@@ -13,10 +18,7 @@ export async function processFile(action, filename, regexPattern, strings, optio
         return '//';  // Default
     }
     
-    // Helper function to escape special characters for use in regex
-    function escapeRegExp(string) {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
+
     
     // Helper function to detect line endings
     function detectLineEnding(content) {
