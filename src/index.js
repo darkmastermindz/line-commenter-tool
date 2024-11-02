@@ -81,7 +81,8 @@ export async function processFile(action, filename, regexPattern, strings, optio
                 }
             } else {
                 if (filename.endsWith('.py') && action === 'comment') {
-                    const regex = new RegExp(`^\\s*${regexPattern}`, 'gm');
+                    const sanitizedRegexPattern = escapeRegExp(regexPattern);
+                    const regex = new RegExp(`^\\s*${sanitizedRegexPattern}`, 'gm');
                     content = content.replace(regex, (match) => {
                         if (match.trim().startsWith(commentSymbol)) {
                             return match;
@@ -89,7 +90,8 @@ export async function processFile(action, filename, regexPattern, strings, optio
                         return `${startComment} ${match}`;
                     });
                 } else if (filename.endsWith('.css') && action === 'comment') {
-                    const regex = new RegExp(regexPattern, 'g');
+                    const sanitizedRegexPattern = escapeRegExp(regexPattern);
+                    const regex = new RegExp(sanitizedRegexPattern, 'g');
                     content = content.replace(regex, (match) => {
                         // Wrap matched content in block comments
                         return `/* ${match.trim()} */`;
@@ -104,8 +106,8 @@ export async function processFile(action, filename, regexPattern, strings, optio
                     }
 
                     if (regexPattern) {
-                        const escapedRegex = escapeRegExp(regexPattern);
-                        const regexCommentRegex = new RegExp(`^([\\s]*)${action === 'uncomment' ? startComment + '\\s*' : ''}(.*${escapedRegex}.*)$`, 'gm');
+                        const sanitizedRegexPattern = escapeRegExp(regexPattern);
+                        const regexCommentRegex = new RegExp(`^([\\s]*)${action === 'uncomment' ? startComment + '\\s*' : ''}(.*${sanitizedRegexPattern}.*)$`, 'gm');
                         processSingleLineComment(regexCommentRegex, action);
                     }
                 }
