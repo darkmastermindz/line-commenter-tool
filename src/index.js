@@ -1,28 +1,28 @@
 import fs from 'fs-extra';
 
-// Helper function to determine the comment symbol based on file extension
-function getCommentSymbol(filename) {
-    if (filename.match(/\.(js|jsx|ts|tsx|c|cpp|cs|java|php)$/)) return '//';
-    if (filename.match(/\.(py|rb|sh|yml|yaml)$/) || filename === 'Dockerfile') return '#';
-    if (filename.match(/\.(html|xml|md)$/)) return '<!-- -->';
-    if (filename.match(/\.(css|scss|less)$/)) return '/* */';
-    return '//';  // Default
-}
-
-// Helper function to escape special characters for use in regex
-function escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-// Helper function to detect line endings
-function detectLineEnding(content) {
-    const crlf = /\r\n/;
-    return crlf.test(content) ? '\r\n' : '\n';
-}
-
 // Main function to process the file
 export async function processFile(action, filename, regexPattern, strings, options = {}) {
     const { silent = false, multiline = false } = options;
+
+    // Helper function to determine the comment symbol based on file extension
+    function getCommentSymbol(filename) {
+        if (filename.match(/\.(js|jsx|ts|tsx|c|cpp|cs|java|php)$/)) return '//';
+        if (filename.match(/\.(py|rb|sh|yml|yaml)$/) || filename === 'Dockerfile') return '#';
+        if (filename.match(/\.(html|xml|md)$/)) return '<!-- -->';
+        if (filename.match(/\.(css|scss|less)$/)) return '/* */';
+        return '//';  // Default
+    }
+    
+    // Helper function to escape special characters for use in regex
+    function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    
+    // Helper function to detect line endings
+    function detectLineEnding(content) {
+        const crlf = /\r\n/;
+        return crlf.test(content) ? '\r\n' : '\n';
+    }
 
     try {
         let content = await fs.readFile(filename, 'utf8');
