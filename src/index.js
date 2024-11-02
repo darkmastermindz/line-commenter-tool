@@ -53,36 +53,32 @@ export async function processFile(action, filename, regexPattern, strings, optio
             }
         };
 
-        const processPythonComment = (safeRegexPattern) => {
-            const regex = new RegExp(`^(\s*)([^#].*?${safeRegexPattern}.*)$`, 'gm');
-            content = content.replace(regex, (match, p1, p2) => {
-                // Ensure the line is commented unless it already starts with a comment
-                if (p2.trimStart().startsWith(commentSymbol)) {
+        const processMultilineBlockComment = (startPattern, endPattern, actionType) => {
+            const blockCommentRegex = new RegExp(
+                `^([\s]*)${startPattern}\s*[\s\S]*?${endPattern}`,
+                'gm'
+            );
+            if (actionType === 'comment') {
+                content = content.replace(blockCommentRegex, match => {
+                    // Properly handle nested block comments
+                    if (match.trim().startsWith(startPattern)) {
+                        return match;
+                    }
+                    return `${startPattern} ${match.trim()} ${endPattern}`;
+                });
+            } else if (actionType === 'uncomment') {
+                content = content.replace(blockCommentRegex, match => match.replace(new RegExp(`^\s*${startPattern}\s*|\s*${endPattern}\s*$`, 'g'), ''));
+            }
+        };
+
+        const processPythonMultilineStrings = (actionType) => {
+            const tripleQuoteRegex = /(["']{3})([\s\S]*?)\1/gm;
+            if (actionType === 'comment') {
+                content = content.replace(tripleQuoteRegex, (match, p1, p2) => {
+                    // Skip processing inside triple-quoted strings
                     return match;
-                }
-                return `${p1}${startComment} ${p2}`;
-            });
-        };
-
-        const processCssComment = (safeRegexPattern) => {
-            const regex = new RegExp(safeRegexPattern, 'g');
-            content = content.replace(regex, (match) => {
-                // Wrap matched content in block comments
-                return `/* ${match.trim()} */`;
-            });
-        };
-
-        const processStringComments = (strings, action) => {
-            strings.forEach((string) => {
-                const escapedString = escapeRegExp(string);
-                const commentRegex = new RegExp(`^([\\s]*)${action === 'uncomment' ? startComment + '\\s*' : ''}(.*${escapedString}.*)$`, 'gm');
-                processSingleLineComment(commentRegex, action);
-            });
-        };
-
-        const processRegexComments = (safeRegexPattern, action) => {
-            const regexCommentRegex = new RegExp(`^([\s]*)${action === 'uncomment' ? startComment + '\s*' : ''}(.*${safeRegexPattern}.*)$`, 'gm');
-            processSingleLineComment(regexCommentRegex, action);
+                });
+            }
         };
 
         if (action === 'comment' || action === 'uncomment') {
@@ -94,20 +90,35 @@ export async function processFile(action, filename, regexPattern, strings, optio
                     processMultilineBlockComment(startPattern, endPattern, action);
                 }
             } else {
-                // Sanitize regexPattern before using it in a regex
-                const safeRegexPattern = regexPattern ? escapeRegExp(regexPattern) : '';
-
                 if (filename.endsWith('.py') && action === 'comment') {
-                    processPythonComment(safeRegexPattern);
+                    // Process Python multiline strings first to avoid modifying them
+                    processPythonMultilineStrings(action);
+
+                    const regex = new RegExp(`^\s*${regexPattern}`, 'gm');
+                    content = content.replace(regex, (match) => {
+                        if (match.trimStart().startsWith(commentSymbol)) {
+                            return match;
+                        }
+                        return `${startComment} ${match}`;
+                    });
                 } else if (filename.endsWith('.css') && action === 'comment') {
-                    processCssComment(safeRegexPattern);
+                    const regex = new RegExp(regexPattern, 'g');
+                    content = content.replace(regex, (match) => {
+                        // Wrap matched content in block comments
+                        return `/* ${match.trim()} */`;
+                    });
                 } else {
                     if (strings && strings.length > 0) {
-                        processStringComments(strings, action);
+                        strings.forEach((string) => {
+                            const escapedString = escapeRegExp(string);
+                            const commentRegex = new RegExp(`^([\s]*)${action === 'uncomment' ? startComment + '\s*' : ''}(.*${escapedString}.*)$`, 'gm');
+                            processSingleLineComment(commentRegex, action);
+                        });
                     }
 
                     if (regexPattern) {
-                        processRegexComments(safeRegexPattern, action);
+                        const regexCommentRegex = new RegExp(`^([\s]*)${action === 'uncomment' ? startComment + '\s*' : ''}(.*${regexPattern}.*)$`, 'gm');
+                        processSingleLineComment(regexCommentRegex, action);
                     }
                 }
             }
