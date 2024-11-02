@@ -111,13 +111,13 @@ export async function processFile(action, filename, regexPattern, strings, optio
                     if (strings && strings.length > 0) {
                         strings.forEach((string) => {
                             const escapedString = escapeRegExp(string);
-                            const commentRegex = new RegExp(`^([\s]*)${action === 'uncomment' ? startComment + '\s*' : ''}(.*${escapedString}.*)$`, 'gm');
+                            const commentRegex = new RegExp(`^([\\s]*)${action === 'uncomment' ? startComment + '\\s*' : ''}(.*${escapedString}.*)$`, 'gm');
                             processSingleLineComment(commentRegex, action);
                         });
                     }
 
                     if (regexPattern) {
-                        const regexCommentRegex = new RegExp(`^([\s]*)${action === 'uncomment' ? startComment + '\s*' : ''}(.*${regexPattern}.*)$`, 'gm');
+                        const regexCommentRegex = new RegExp(`^([\\s]*)${action === 'uncomment' ? startComment + '\\s*' : ''}(.*${regexPattern}.*)$`, 'gm');
                         processSingleLineComment(regexCommentRegex, action);
                     }
                 }
