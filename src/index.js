@@ -55,7 +55,7 @@ export async function processFile(action, filename, regexPattern, strings, optio
 
         const processMultilineBlockComment = (startPattern, endPattern, actionType) => {
             const blockCommentRegex = new RegExp(
-                `^([\s]*)${startPattern}\s*[\s\S]*?${endPattern}`,
+                `^([\s]*)${startPattern}\s*[\S]*?${endPattern}`,
                 'gm'
             );
             if (actionType === 'comment') {
