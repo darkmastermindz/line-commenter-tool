@@ -34,14 +34,14 @@ export async function processFile(action, filename, regexPattern, strings, optio
         content = content.replace(/\r\n/g, '\n');
 
         const commentSymbol = getCommentSymbol(filename);
-        const startComment = escapeRegExp(commentSymbol.split(' ')[0]);
-        const endComment = commentSymbol.split(' ')[1] ? escapeRegExp(commentSymbol.split(' ')[1]) : '';
+        const startComment = commentSymbol.split(' ')[0];
+        const endComment = commentSymbol.split(' ')[1] ? commentSymbol.split(' ')[1] : '';
 
         const processSingleLineComment = (commentRegex, actionType) => {
             if (actionType === 'comment') {
                 content = content.replace(commentRegex, (match, p1, p2) => {
-                    // Prevent commenting lines that are already commented
-                    if (p2.trim().startsWith(commentSymbol)) {
+                    // Skip lines only if they already start with the comment symbol
+                    if (p2.trimStart().startsWith(commentSymbol)) {
                         return match;
                     }
                     return `${p1}${startComment} ${p2}`;
@@ -55,7 +55,7 @@ export async function processFile(action, filename, regexPattern, strings, optio
 
         const processMultilineBlockComment = (startPattern, endPattern, actionType) => {
             const blockCommentRegex = new RegExp(
-                `^([\\s]*)${startPattern}\\s*[\\s\\S]*?${endPattern}`,
+                `^([\s]*)${startPattern}\s*[\s\S]*?${endPattern}`,
                 'gm'
             );
             if (actionType === 'comment') {
@@ -67,7 +67,7 @@ export async function processFile(action, filename, regexPattern, strings, optio
                     return `${startPattern} ${match.trim()} ${endPattern}`;
                 });
             } else if (actionType === 'uncomment') {
-                content = content.replace(blockCommentRegex, match => match.replace(new RegExp(`^\\s*${startPattern}\\s*|\\s*${endPattern}\\s*$`, 'g'), ''));
+                content = content.replace(blockCommentRegex, match => match.replace(new RegExp(`^\s*${startPattern}\s*|\s*${endPattern}\s*$`, 'g'), ''));
             }
         };
 
@@ -75,23 +75,21 @@ export async function processFile(action, filename, regexPattern, strings, optio
             if (multiline && endComment) {
                 // Handle multiline comments
                 if (regexPattern) {
-                    const startPattern = escapeRegExp(startComment);
-                    const endPattern = escapeRegExp(endComment);
+                    const startPattern = startComment;
+                    const endPattern = endComment;
                     processMultilineBlockComment(startPattern, endPattern, action);
                 }
             } else {
                 if (filename.endsWith('.py') && action === 'comment') {
-                    const sanitizedRegexPattern = escapeRegExp(regexPattern);
-                    const regex = new RegExp(`^\\s*${sanitizedRegexPattern}`, 'gm');
+                    const regex = new RegExp(`^\s*${regexPattern}`, 'gm');
                     content = content.replace(regex, (match) => {
-                        if (match.trim().startsWith(commentSymbol)) {
+                        if (match.trimStart().startsWith(commentSymbol)) {
                             return match;
                         }
                         return `${startComment} ${match}`;
                     });
                 } else if (filename.endsWith('.css') && action === 'comment') {
-                    const sanitizedRegexPattern = escapeRegExp(regexPattern);
-                    const regex = new RegExp(sanitizedRegexPattern, 'g');
+                    const regex = new RegExp(regexPattern, 'g');
                     content = content.replace(regex, (match) => {
                         // Wrap matched content in block comments
                         return `/* ${match.trim()} */`;
@@ -100,14 +98,13 @@ export async function processFile(action, filename, regexPattern, strings, optio
                     if (strings && strings.length > 0) {
                         strings.forEach((string) => {
                             const escapedString = escapeRegExp(string);
-                            const commentRegex = new RegExp(`^([\\s]*)${action === 'uncomment' ? startComment + '\\s*' : ''}(.*${escapedString}.*)$`, 'gm');
+                            const commentRegex = new RegExp(`^([\s]*)${action === 'uncomment' ? startComment + '\s*' : ''}(.*${escapedString}.*)$`, 'gm');
                             processSingleLineComment(commentRegex, action);
                         });
                     }
 
                     if (regexPattern) {
-                        const sanitizedRegexPattern = escapeRegExp(regexPattern);
-                        const regexCommentRegex = new RegExp(`^([\\s]*)${action === 'uncomment' ? startComment + '\\s*' : ''}(.*${sanitizedRegexPattern}.*)$`, 'gm');
+                        const regexCommentRegex = new RegExp(`^([\s]*)${action === 'uncomment' ? startComment + '\s*' : ''}(.*${regexPattern}.*)$`, 'gm');
                         processSingleLineComment(regexCommentRegex, action);
                     }
                 }
