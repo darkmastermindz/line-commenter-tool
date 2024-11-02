@@ -75,13 +75,13 @@ export async function processFile(action, filename, regexPattern, strings, optio
         const processStringComments = (strings, action) => {
             strings.forEach((string) => {
                 const escapedString = escapeRegExp(string);
-                const commentRegex = new RegExp(`^([\s]*)${action === 'uncomment' ? startComment + '\\s*' : ''}(.*${escapedString}.*)$`, 'gm');
+                const commentRegex = new RegExp(`^([\s]*)${action === 'uncomment' ? startComment + '\s*' : ''}(.*${escapedString}.*)$`, 'gm');
                 processSingleLineComment(commentRegex, action);
             });
         };
 
         const processRegexComments = (safeRegexPattern, action) => {
-            const regexCommentRegex = new RegExp(`^([\s]*)${action === 'uncomment' ? startComment + '\\s*' : ''}(.*${safeRegexPattern}.*)$`, 'gm');
+            const regexCommentRegex = new RegExp(`^([\s]*)${action === 'uncomment' ? startComment + '\s*' : ''}(.*${safeRegexPattern}.*)$`, 'gm');
             processSingleLineComment(regexCommentRegex, action);
         };
 
