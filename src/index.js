@@ -67,7 +67,7 @@ export async function processFile(action, filename, regexPattern, strings, optio
                     return `${startPattern} ${match.trim()} ${endPattern}`;
                 });
             } else if (actionType === 'uncomment') {
-                content = content.replace(blockCommentRegex, match => match.replace(new RegExp(`^\s*${startPattern}\s*|\s*${endPattern}\s*$`, 'g'), ''));
+                content = content.replace(blockCommentRegex, match => match.replace(new RegExp(`^\\s*${startPattern}\\s*|\\s*${endPattern}\\s*$`, 'g'), ''));
             }
         };
 
