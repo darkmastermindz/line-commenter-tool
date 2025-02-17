@@ -5,7 +5,9 @@
 
 A developer experience tool to comment or uncomment lines in a file based on regex patterns and specific strings, while preserving existing inline comments built in NodeJS.
 
-Recommend usage is to paired it with [husky](https://github.com/typicode/husky) to automate your post-checkout and pre-commit actions to comment / uncomment code for local development to speed up your team's workflow. Have a sucess story or another use case? Would love to hear about it, email: [oss@hanselwei.dev](mailto:oss@hanselwei.dev). If this has helped your team, please consider sponsoring this repo.
+- Recommend usage is to pair it with [husky](https://github.com/typicode/husky) to automate your post-checkout and pre-commit actions to comment / uncomment code for local development to speed up your team's workflow.
+- Have a sucess story or another use case? Would love to hear about it, email: [oss@hanselwei.dev](mailto:oss@hanselwei.dev).
+- If this has helped your team, please consider sponsoring this repo.
 
 ## Features
 
