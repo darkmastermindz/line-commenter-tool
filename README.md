@@ -1,6 +1,6 @@
 
 # Line Commenter Tool
-[![NPM](https://img.shields.io/badge/NPM-%23CB3837.svg?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/package/line-commenter-tool/access) 
+[![NPM](https://img.shields.io/badge/NPM-%23CB3837.svg?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/package/line-commenter-tool) 
  [![Node.js Package](https://github.com/darkmastermindz/line-commenter-tool/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/darkmastermindz/line-commenter-tool/actions/workflows/npm-publish.yml)
 
 A developer experience tool to comment or uncomment lines in a file based on regex patterns and specific strings, while preserving existing inline comments built in NodeJS.
