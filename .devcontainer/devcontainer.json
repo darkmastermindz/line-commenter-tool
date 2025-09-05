@@ -1,0 +1,9 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "none" // Prevents default Node.js installation by the feature
+    }
+  },
+  "postCreateCommand": "bash -c \"source $NVM_DIR/nvm.sh && nvm install 18 && nvm alias default 18 && nvm use default\""
+}
