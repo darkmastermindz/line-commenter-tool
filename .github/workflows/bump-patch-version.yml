@@ -1,0 +1,23 @@
+name: Bump Patch Version
+
+actions:
+  version-bump:
+    runs:
+      using: "node12"
+      steps:
+        - name: Checkout Code
+          uses: actions/checkout@v2
+
+        - name: Bump Patch Version
+          run: |
+            version=$(node -pe "require('./package.json').version")
+            IFS='.' read -r major minor patch <<< "$version"
+            new_version="${major}.${minor}.$((patch + 1))"
+            sed -i "s/\"version\": \"$version\"/\"version\": \"$new_version\"/" package.json
+
+        - name: Commit Changes
+          run: |
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git commit -m 'Bump patch version'
+            git push origin bump-patch-version-workflow
