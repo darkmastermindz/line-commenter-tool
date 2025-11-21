@@ -3,7 +3,7 @@ name: Bump Patch Version
 actions:
   version-bump:
     runs:
-      using: "node12"
+      using: "node24"
       steps:
         - name: Checkout Code
           uses: actions/checkout@v2
@@ -19,5 +19,6 @@ actions:
           run: |
             git config --local user.email "action@github.com"
             git config --local user.name "GitHub Action"
+            git add ./package*.json
             git commit -m 'Bump patch version'
             git push origin bump-patch-version-workflow
