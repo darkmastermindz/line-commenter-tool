@@ -1,24 +1,40 @@
-name: Bump Patch Version
+name: Version Bump
 
-actions:
-  version-bump:
-    runs:
-      using: "node18"
-      steps:
-        - name: Checkout Code
-          uses: actions/checkout@v2
+on:
+  workflow_dispatch:
+    inputs:
+      newversion:
+        description: 'Semantic Version Bump Type (major minor patch)'
+        required: true
 
-        - name: Bump Patch Version
-          run: |
-            version=$(node -pe "require('./package.json').version")
-            IFS='.' read -r major minor patch <<< "$version"
-            new_version="${major}.${minor}.$((patch + 1))"
-            sed -i "s/\"version\": \"$version\"/\"version\": \"$new_version\"/" package.json
+env:
+  node_version: lts/*
 
-        - name: Commit Changes
-          run: |
-            git config --local user.email "action@github.com"
-            git config --local user.name "GitHub Action"
-            git add ./package*.json
-            git commit -m 'Bump patch version'
-            git push origin bump-patch-version-workflow
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      tagName: ${{ steps.npm-bump.outputs.release_tag }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        # fetch full history so things like auto-changelog work properly
+        fetch-depth: 0
+    - name: Use Node.js ${{ env.node_version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.node_version }}
+        # setting a registry enables the NODE_AUTH_TOKEN env variable where we can set an npm token.  REQUIRED
+        # registry-url: 'https://registry.npmjs.org'
+    - run: npm i
+    - run: npm test
+    - name: Version
+      id: npm-bump
+      uses: bcomnes/npm-bump@v2
+      with:
+        git_email: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
+        git_username: ${{ github.actor }}
+        newversion: ${{ github.event.inputs.newversion }}
+        push_version_commit: true # if your prePublishOnly step pushes git commits, you can omit this input or set it to false.
+        github_token: ${{ secrets.GITHUB_TOKEN }} # built in actions token.  Passed tp gh-release if in use.
+    - run: echo ${{ steps.npm-bump.outputs.release_tag }}
