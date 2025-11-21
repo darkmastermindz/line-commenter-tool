@@ -3,7 +3,7 @@ name: Bump Patch Version
 actions:
   version-bump:
     runs:
-      using: "node24"
+      using: "node18"
       steps:
         - name: Checkout Code
           uses: actions/checkout@v2
