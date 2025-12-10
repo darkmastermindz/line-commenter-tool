@@ -1,161 +1,136 @@
-
 # Line Commenter Tool
-[![NPM](https://img.shields.io/badge/NPM-%23CB3837.svg?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/package/line-commenter-tool) 
- [![Node.js Package](https://github.com/darkmastermindz/line-commenter-tool/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/darkmastermindz/line-commenter-tool/actions/workflows/npm-publish.yml)
 
-A developer experience tool to comment or uncomment lines in a file based on regex patterns and specific strings, while preserving existing inline comments built in NodeJS.
+[![NPM](https://img.shields.io/badge/NPM-%23CB3837.svg?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/package/line-commenter-tool)
+[![Node.js Package](https://github.com/darkmastermindz/line-commenter-tool/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/darkmastermindz/line-commenter-tool/actions/workflows/npm-publish.yml)
 
-- Recommend usage is to pair it with [husky](https://github.com/typicode/husky) to automate your post-checkout and pre-commit actions to comment / uncomment code for local development to speed up your team's workflow.
-- Have a sucess story or another use case? Would love to hear about it, email: [oss@hanselwei.dev](mailto:oss@hanselwei.dev).
-- If this has helped your team, please consider sponsoring this repo.
+A developer experience utility to comment or uncomment specific lines in files (by regex or explicit strings), while preserving existing inline comments. Built with Node.js for easy integration into developer workflows (for example via Husky Git hooks).
+
+- Preferred usage: pair it with Husky to automatically comment/uncomment lines during post-checkout, pre-commit, or other Git hooks to streamline local development.
+- Have a success story or a use case to share? Email: oss@hanselwei.dev
+- If this tool helped your team, please consider sponsoring the project.
 
 ## Features
 
-- **Comment and Uncomment Lines**: Add or remove comments from lines matching specified regex patterns or containing specific strings.
-- **Support for Multiple File Types**: Handles various comment styles, including single-line comments (`//`, `#`) and block comments (`/* */`, `<!-- -->`).
-- **Preserve Inline Comments**: Ensures existing inline comments remain unchanged when commenting or uncommenting lines.
-- **Nested Comment Handling**: Supports commenting and uncommenting nested comments by adding or removing one layer at a time.
-- **Command-Line Interface**: Easily use the tool via CLI for integration with various workflows.
+- Comment and uncomment individual lines based on regex patterns or exact string matches.
+- Support for many file types and comment styles (single-line and block comments).
+- Preserves existing inline comments when adding or removing comment wrappers.
+- Handles nested comments by adding or removing one layer of commenting at a time.
+- Command-line interface for easy automation and integration.
+
+## Supported comment styles
+
+The tool works with common single-line and block comment styles including, but not limited to:
+- Single-line: `//` (JS/TS), `#` (sh, py), `--` (SQL)
+- Block comments: `/* ... */` (CSS/JS), `<!-- ... -->` (HTML)
+Note: behavior varies with language; use `--multiline` to operate on block comments.
 
 ## Installation
 
-You can install this package globally or locally in your project.
-
-### Global Installation
-
+Install globally:
 ```bash
 npm install -g line-commenter-tool
-npm line-commenter-tool --help
 ```
 
-### Run with npx without installation
-
+Or use without installing via npx:
 ```bash
 npx line-commenter-tool --help
 ```
 
-## Usage
+## Basic Usage
 
-Once installed, you can use the tool via command line:
-
+CLI pattern:
 ```bash
-line-commenter-tool <action> <filename> <regexPattern> [string1,string2,...]
+line-commenter-tool <action> <filename> <regexPattern> [string1,string2,...] [options]
 ```
 
-### Description
+- `<action>`: `comment` or `uncomment`
+- `<filename>`: path to the file to process (relative or absolute)
+- `<regexPattern>`: regex pattern (as a quoted string) used to match lines
+- `[string1,string2,...]` (optional): comma-separated exact strings to match
 
-The `line-commenter-tool` is a command-line utility designed to comment or uncomment specific lines in a file based on a regex pattern or specific strings. It supports various file formats and comment styles, making it versatile for multiple programming languages.
+Options:
+- `--help`           Show help and exit
+- `--version`        Show version and exit
+- `--silent`         Suppress output messages
+- `--multiline`      Enable processing of multiline block comments (e.g., `/* ... */`, `<!-- ... -->`)
 
-This tool works by searching for lines in the specified file that match the given regex pattern or strings. Depending on the specified action (`comment` or `uncomment`), the tool will either add or remove comment markers on those lines.
+Behavior notes:
+- The tool is case-sensitive by default. Ensure your regex or string matches the target casing.
+- The tool modifies files in place. Use version control or back up files before running on important files.
 
-### Actions
+## Examples
 
-- `comment`: Adds comment markers to lines that match the regex pattern or strings.
-- `uncomment`: Removes comment markers from lines that match the regex pattern or strings.
+1. Comment all lines containing `console.log` in a JS file:
+```bash
+line-commenter-tool comment app.js "console\\.log"
+```
 
-### Arguments
+2. Uncomment all lines that contain `TODO` in a Python file:
+```bash
+line-commenter-tool uncomment script.py "TODO"
+```
 
-- `<action>`: The action to perform: `comment` or `uncomment`.
-- `<filename>`: The file to process.
-- `<regexPattern>`: A regex pattern to identify lines to be commented or uncommented.
-- `[string1,string2,...]` (Optional): A comma-separated list of strings to be matched exactly.
+3. Comment lines matching multiple explicit strings (comma-separated):
+```bash
+line-commenter-tool comment config.yml "DEBUG" "error,warning"
+```
 
-### Options
+4. Uncomment a full multiline block in a CSS file:
+```bash
+line-commenter-tool uncomment styles.css "/\\*" --multiline
+```
 
-- `--help`: Show this help message and exit.
-- `--version`: Show the tool\'s version and exit.
-- `--silent`: Suppress output messages. When this flag is used, the tool will run without logging any success or error messages.
-- `--multiline`: Enable processing of multiline comments. When this flag is used, the tool will comment or uncomment entire multiline block comments (e.g., `/* ... */`, `<!-- ... -->`) based on a full match of the regex pattern.
+5. Use with npx (no install):
+```bash
+npx line-commenter-tool comment src/index.js "debug\\(" --silent
+```
 
-### Examples
-
-1. **Comment all lines containing the string `console.log` in a JavaScript file:**
-   ```bash
-   line-commenter-tool comment app.js "console\\.log"
-   ```
-
-2. **Uncomment all lines that match the regex pattern `TODO` in a Python file:**
-   ```bash
-   line-commenter-tool uncomment script.py "TODO"
-   ```
-
-3. **Comment specific lines in a file using multiple strings:**
-   ```bash
-   line-commenter-tool comment config.yml "DEBUG" "error,warning"
-   ```
-
-4. **Uncomment a full multiline block comment in a CSS file:**
-   ```bash
-   line-commenter-tool uncomment styles.css "/*" --multiline
-   ```
-
-### Notes
-
-- ⚠️ The tool is case-sensitive by default. Ensure your regex patterns and strings match the case of the content you want to comment or uncomment.
-- 💡 The `--multiline` option is particularly useful for handling languages that use block comments for larger sections of code, such as CSS, HTML, or JavaScript.
+Tips:
+- When writing shell commands in examples, escape regex metacharacters appropriately (see examples above).
+- If a pattern contains spaces or shell-special characters, wrap it in single quotes.
 
 ## Integration with Husky
 
-Husky is a tool for managing Git hooks. Here\'s how you can integrate `line-commenter-tool` with Husky to automatically comment or uncomment lines during certain Git actions.
+Husky can run this tool as part of Git hooks to automatically apply comment/uncomment transformations.
 
-### Setup Husky
-
-First, install Husky in your project:
-
+Install Husky:
 ```bash
 npm install husky --save-dev
-```
-
-Enable Git hooks:
-
-```bash
 npx husky install
 ```
 
-### Add a Hook
-
-Create a new hook, for example, a pre-commit hook to comment specific lines:
-
+Add a pre-commit hook that runs the tool:
 ```bash
 npx husky add .husky/pre-commit "npx line-commenter-tool comment path/to/file.js 'console\\.log\\(\\)' 'TODO'"
+chmod +x .husky/pre-commit
 ```
 
-This will ensure that every time you commit, the specified lines in `file.js` are commented according to your defined patterns.
+Example `.husky/pre-commit`:
+```bash
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
 
-### Recommended Husky Configuration (Husky v9+)
+# Comment out console.log and TODO lines before commit
+npx line-commenter-tool comment path/to/file.js 'console\.log\(' 'TODO'
+```
 
-Here\'s an example of configuring Husky to run `line-commenter-tool` as part of your pre-commit hook:
+## Safety & Best Practices
 
-1. **Create `.husky/pre-commit`**
-
-   ```bash
-   npx husky add .husky/pre-commit "npx line-commenter-tool comment path/to/file.js 'console\\.log\\(\\)' 'TODO'"
-   ```
-
-2. **Make sure your hooks are executable**
-
-   ```bash
-   chmod +x .husky/pre-commit
-   ```
-
-3. **Example pre-commit hook file content**
-
-   ```bash
-   #!/bin/sh
-   . "$(dirname "$0")/_/husky.sh"
-
-   # Run line-commenter-tool before committing
-   npx line-commenter-tool comment path/to/file.js 'console\\.log\\(\\)' 'TODO'
-   ```
-
-## License
-
-This project is licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) file for details.
+- The tool edits files in place. Keep files under version control so changes can be reviewed and reverted.
+- Test your regex patterns on small files or with controlled inputs before running across a codebase.
+- Consider running the command locally with `--silent` disabled to confirm behavior before automating in hooks.
 
 ## Contribution
 
-Contributions are welcome! Please open an issue or submit a pull request for improvements.
+Contributions and improvements are welcome. Please open an issue or submit a pull request.
+
+If you'd like me to prepare a branch and PR with this README update, tell me the target branch name and I can create it for you.
+
+## License
+
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
 
 ## Support
 
-If you encounter any issues or have questions, please open an issue on the GitHub repository.
+If you encounter issues or have questions, please open an issue on the GitHub repository:
+https://github.com/darkmastermindz/line-commenter-tool/issues
