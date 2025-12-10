@@ -10,7 +10,6 @@ on:
 jobs:
   build:
     permissions:
-      id-token: write
       contents: read
     runs-on: ubuntu-latest
     steps:
@@ -22,6 +21,9 @@ jobs:
       - run: npm test
 
   publish-npm:
+    permissions:
+      id-token: write
+      contents: read
     needs: build
     runs-on: ubuntu-latest
     steps:
