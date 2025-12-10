@@ -6,7 +6,8 @@ The following table lists the versions of the project that are currently support
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.x.x   | :white_check_mark: |
+| 1.x.x   | ❌ |
+| 2.x.x   | :white_check_mark: |
 
 
 Versions that are no longer supported will not receive security updates. Users are encouraged to upgrade to the latest supported version to ensure they have the latest security fixes.
