@@ -5,5 +5,5 @@
       "version": "none" // Prevents default Node.js installation by the feature
     }
   },
-  "postCreateCommand": "bash -c \"source $NVM_DIR/nvm.sh && nvm install 18 && nvm alias default 18 && nvm use default\""
+  "postCreateCommand": "bash -c \"source $NVM_DIR/nvm.sh && nvm install 20 && nvm alias default 20 && nvm use default\""
 }
