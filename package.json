@@ -18,6 +18,10 @@
   "keywords": ["comment", "uncomment", "regex", "shelljs", "code", "line", "cli", "dx", "developer", "tool"],
   "author": "Hansel Wei",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/darkmastermindz/line-commenter-tool.git"
+  },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.3",
