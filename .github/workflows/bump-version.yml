@@ -1,7 +1,6 @@
 name: Bump Version
 
 on:
-  push:
   workflow_dispatch:
     inputs:
       version:
@@ -29,7 +28,6 @@ jobs:
         id: validate
         run: |
           VERSION="${{ github.event.inputs.version }}"
-          VERSION=2.1.0
 
           # Validate semver format (major.minor.patch with optional pre-release/build metadata)
           if ! echo "$VERSION" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\+([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?$'; then
