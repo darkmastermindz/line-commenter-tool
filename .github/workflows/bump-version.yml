@@ -107,5 +107,5 @@ jobs:
           gh pr create \
             --title "chore: bump version to ${{ github.event.inputs.version }}" \
             --body "$BODY" \
-            --base main \
+            --base ${{ github.ref_name }} \
             --head "chore/bump-version-${{ github.event.inputs.version }}"
