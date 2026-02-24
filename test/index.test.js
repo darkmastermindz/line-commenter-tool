@@ -1,8 +1,12 @@
 import fs from 'fs-extra';
 import path from 'path';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
 import { processFile } from '../src/index.js';  // Use named import to match the export
 
+const execFileAsync = promisify(execFile);
 const testDir = path.resolve(__dirname, 'test-files');
+const binPath = path.resolve(__dirname, '../bin/line-commenter-tool.js');
 
 // Helper Function Extend String prototype with parseLiteralCodeBlock method 
 // to match content in files and maintain code-linting
@@ -151,5 +155,43 @@ describe('line-commenter-tool', () => {
         const result = fs.readFileSync(testFilePath, 'utf8');  // Use readFileSync for consistency
         
         expect(result).toMatch(/console\.log\('Line 4'\);/);
+    });
+});
+
+describe('CLI flag tests', () => {
+    test('--version flag prints version and exits', async () => {
+        const { stdout } = await execFileAsync('node', [binPath, '--version']);
+        expect(stdout).toMatch(/line-commenter-tool version \d+\.\d+\.\d+/);
+    });
+
+    test('-v flag prints version and exits', async () => {
+        const { stdout } = await execFileAsync('node', [binPath, '-v']);
+        expect(stdout).toMatch(/line-commenter-tool version \d+\.\d+\.\d+/);
+    });
+
+    test('--help flag prints usage and exits', async () => {
+        const { stdout } = await execFileAsync('node', [binPath, '--help']);
+        expect(stdout).toMatch(/Usage:/);
+        expect(stdout).toMatch(/-h, --help/);
+        expect(stdout).toMatch(/-v, --version/);
+        expect(stdout).toMatch(/-s, --silent/);
+        expect(stdout).toMatch(/-m, --multiline/);
+    });
+
+    test('-h flag prints usage and exits', async () => {
+        const { stdout } = await execFileAsync('node', [binPath, '-h']);
+        expect(stdout).toMatch(/Usage:/);
+        expect(stdout).toMatch(/-h, --help/);
+    });
+
+    test('-s flag suppresses output', async () => {
+        const testFilePath = path.join(testDir, 'testfile.js');
+        const { stdout } = await execFileAsync('node', [binPath, 'comment', testFilePath, 'Line 1', '-s']);
+        expect(stdout).toBe('');
+    });
+
+    test('-m flag enables multiline mode without error', async () => {
+        const testFilePath = path.join(testDir, 'testfile.js');
+        await execFileAsync('node', [binPath, 'comment', testFilePath, 'Line 1', '-m']);
     });
 });

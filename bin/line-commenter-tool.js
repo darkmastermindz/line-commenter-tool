@@ -3,7 +3,10 @@
 import chalk from 'chalk';
 import processFile, { escapeRegExp } from '../src/index.js';
 import { readFile } from 'fs/promises';
-import { resolve } from 'path';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const args = process.argv.slice(2);
 
@@ -22,13 +25,13 @@ const format = {
 };
 
 async function loadPackageJson() {
-    const packageJsonPath = resolve(process.cwd(), 'package.json');
+    const packageJsonPath = resolve(__dirname, '../package.json');
     const packageJson = await readFile(packageJsonPath, 'utf-8');
     return JSON.parse(packageJson);
 }
 
 async function main() {
-    if (args.includes('--help')) {
+    if (args.includes('--help') || args.includes('-h')) {
         console.log(`
 ${format.usage('Usage:')} ${format.action('line-commenter-tool')} <action> <filename> <regexPattern> [string1,string2,...]
 
@@ -52,11 +55,11 @@ ${format.usage('Arguments:')}
   ${format.argument('[string1,string2,...]')} ${format.option('(Optional)')} A comma-separated list of strings to be matched exactly.
 
 ${format.usage('Options:')}
-  ${format.option('--help')}          Show this help message and exit.
-  ${format.option('--version')}       Show the tool's version and exit.
-  ${format.option('--silent')}        Suppress output messages. When this flag is used, the tool will run without logging any 
+  ${format.option('-h, --help')}       Show this help message and exit.
+  ${format.option('-v, --version')}    Show the tool's version and exit.
+  ${format.option('-s, --silent')}     Suppress output messages. When this flag is used, the tool will run without logging any 
                   success or error messages.
-  ${format.option('--multiline')}     Enable processing of multiline comments. When this flag is used, the tool will comment or
+  ${format.option('-m, --multiline')}  Enable processing of multiline comments. When this flag is used, the tool will comment or
                   uncomment entire multiline block comments (e.g., /* ... */, <!-- ... -->) based on a full 
                   match of the regex pattern.
 
@@ -82,15 +85,15 @@ ${format.usage('Notes:')}
         process.exit(0);
     }
 
-    if (args.includes('--version')) {
+    if (args.includes('--version') || args.includes('-v')) {
         const pkg = await loadPackageJson();
         console.log(`${format.action('line-commenter-tool')} version ${format.highlight(pkg.version)}`);
         process.exit(0);
     }
 
-    const silent = args.includes('--silent');
-    const multiline = args.includes('--multiline');
-    const filteredArgs = args.filter(arg => !arg.startsWith('--'));
+    const silent = args.includes('--silent') || args.includes('-s');
+    const multiline = args.includes('--multiline') || args.includes('-m');
+    const filteredArgs = args.filter(arg => !arg.startsWith('-'));
 
     const action = filteredArgs[0];
     const filename = filteredArgs[1];
