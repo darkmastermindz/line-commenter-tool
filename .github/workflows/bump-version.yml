@@ -61,31 +61,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Import GPG key
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: |
-          # Enable loopback pinentry for non-interactive signing
-          mkdir -p ~/.gnupg
-          chmod 700 ~/.gnupg
-          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-          gpg-connect-agent reloadagent /bye
-
-          # Import private key
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
-
-          # Extract key ID and configure git to sign all commits
-          GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep '^sec' | sed 's|.*/||' | awk '{print $1}')
-          git config user.signingkey "$GPG_KEY_ID"
-          git config commit.gpgsign true
-
-          # Preset passphrase in gpg-agent so signing is non-interactive
-          if [ -n "$GPG_PASSPHRASE" ]; then
-            KEYGRIP=$(gpg --list-secret-keys --with-keygrip | grep -A2 '^sec' | grep 'Keygrip' | awk '{print $3}')
-            echo "$GPG_PASSPHRASE" | gpg-preset-passphrase --preset "$KEYGRIP"
-          fi
-
       - name: Create release branch
         run: git checkout -b "chore/bump-version-${{ github.event.inputs.version }}"
 
