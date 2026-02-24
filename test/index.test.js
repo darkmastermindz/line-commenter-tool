@@ -160,12 +160,12 @@ describe('line-commenter-tool', () => {
 
 describe('CLI flag tests', () => {
     test('--version flag prints version and exits', async () => {
-        const { stdout } = await execFileAsync('node', [binPath, '--version']);
+        const { stdout } = await execFileAsync('node', [binPath, '--version'], { cwd: testDir });
         expect(stdout).toMatch(/line-commenter-tool version \d+\.\d+\.\d+/);
     });
 
     test('-v flag prints version and exits', async () => {
-        const { stdout } = await execFileAsync('node', [binPath, '-v']);
+        const { stdout } = await execFileAsync('node', [binPath, '-v'], { cwd: testDir });
         expect(stdout).toMatch(/line-commenter-tool version \d+\.\d+\.\d+/);
     });
 
