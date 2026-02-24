@@ -1,0 +1,136 @@
+name: Bump Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'New semver version (e.g. 2.2.0)'
+        required: true
+        type: string
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Validate version input
+        id: validate
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+
+          # Validate semver format (major.minor.patch with optional pre-release/build metadata)
+          if ! echo "$VERSION" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\+([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?$'; then
+            echo "ERROR: '$VERSION' is not a valid semver version."
+            exit 1
+          fi
+
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "current=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Current version: $CURRENT_VERSION"
+          echo "Requested version: $VERSION"
+
+          # Validate new version is strictly greater than current using Node
+          node -e "
+            const parseBase = (v) => v.replace(/-.*/, '').split('.').map(Number);
+            const curr = parseBase('$CURRENT_VERSION');
+            const next = parseBase('$VERSION');
+            for (let i = 0; i < 3; i++) {
+              if (next[i] > curr[i]) { console.log('Validation passed: $VERSION > $CURRENT_VERSION'); process.exit(0); }
+              if (next[i] < curr[i]) {
+                console.error('ERROR: $VERSION is not greater than current version $CURRENT_VERSION');
+                process.exit(1);
+              }
+            }
+            console.error('ERROR: $VERSION must be strictly greater than current version $CURRENT_VERSION (equal versions are not allowed)');
+            process.exit(1);
+          "
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Import GPG key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          # Enable loopback pinentry for non-interactive signing
+          mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          gpg-connect-agent reloadagent /bye
+
+          # Import private key
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+
+          # Extract key ID and configure git to sign all commits
+          GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep '^sec' | sed 's|.*/||' | awk '{print $1}')
+          git config user.signingkey "$GPG_KEY_ID"
+          git config commit.gpgsign true
+
+          # Preset passphrase in gpg-agent so signing is non-interactive
+          if [ -n "$GPG_PASSPHRASE" ]; then
+            KEYGRIP=$(gpg --list-secret-keys --with-keygrip | grep -A2 '^sec' | grep 'Keygrip' | awk '{print $3}')
+            echo "$GPG_PASSPHRASE" | gpg-preset-passphrase --preset "$KEYGRIP"
+          fi
+
+      - name: Create release branch
+        run: git checkout -b "chore/bump-version-${{ github.event.inputs.version }}"
+
+      - name: Bump version in package.json
+        run: npm version ${{ github.event.inputs.version }} --no-git-tag-version
+
+      - name: Regenerate package-lock.json
+        run: npm install --package-lock-only
+
+      - name: Verify with npm ci
+        run: npm ci
+
+      - name: Commit changes
+        run: |
+          git add package.json package-lock.json
+          git commit -m "chore: bump version to ${{ github.event.inputs.version }}"
+
+      - name: Push branch
+        run: git push origin "chore/bump-version-${{ github.event.inputs.version }}"
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BODY=$(cat <<'PREOF'
+          ## Version Bump
+
+          Bumps the package version from `CURRENT_PLACEHOLDER` to `VERSION_PLACEHOLDER`.
+
+          ### Changes
+          - Updated `package.json` version to `VERSION_PLACEHOLDER`
+          - Regenerated `package-lock.json`
+          - Verified install with `npm ci`
+
+          ---
+          _Triggered via workflow dispatch by @ACTOR_PLACEHOLDER_
+          PREOF
+          )
+
+          BODY="${BODY//CURRENT_PLACEHOLDER/${{ steps.validate.outputs.current }}}"
+          BODY="${BODY//VERSION_PLACEHOLDER/${{ github.event.inputs.version }}}"
+          BODY="${BODY//ACTOR_PLACEHOLDER/${{ github.actor }}}"
+
+          gh pr create \
+            --title "chore: bump version to ${{ github.event.inputs.version }}" \
+            --body "$BODY" \
+            --base main \
+            --head "chore/bump-version-${{ github.event.inputs.version }}"
