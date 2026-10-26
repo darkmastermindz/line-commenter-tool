@@ -33,6 +33,18 @@ jobs:
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org/
+      - name: Fail early if this version is already on npm
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "::error::$NAME@$VERSION is already published. Bump package.json before tagging a release."
+            exit 1
+          fi
+      - name: Verify npm token before requesting OTP
+        run: npm whoami
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
       - uses: darkmastermindz/wait-for-secrets@b28dd72be0c70fadb07e407e3ccc843c46635e69 # node24-runtime
         id: wait-for-secrets
         with:
