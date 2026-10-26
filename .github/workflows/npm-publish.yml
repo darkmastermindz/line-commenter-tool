@@ -33,7 +33,7 @@ jobs:
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org/
-      - uses: step-security/wait-for-secrets@v1.2.1
+      - uses: darkmastermindz/wait-for-secrets@b28dd72be0c70fadb07e407e3ccc843c46635e69 # node24-runtime
         id: wait-for-secrets
         with:
           secrets: |
