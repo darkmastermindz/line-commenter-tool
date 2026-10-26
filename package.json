@@ -5,8 +5,8 @@
   "main": "src/index.js",
   "type": "module",
   "bin": {
-    "line-commenter-tool": "./bin/line-commenter-tool.js",
-    "line-commenter-tool-sh": "./line-commenter-tool.sh"
+    "line-commenter-tool": "bin/line-commenter-tool.js",
+    "line-commenter-tool-sh": "bin/line-commenter-tool.sh"
   },
   "scripts": {
     "test": "jest"
