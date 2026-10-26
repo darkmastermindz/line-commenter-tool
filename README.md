@@ -49,10 +49,10 @@ line-commenter-tool <action> <filename> <regexPattern> [string1,string2,...] [op
 - `[string1,string2,...]` (optional): comma-separated exact strings to match
 
 Options:
-- `--help`           Show help and exit
-- `--version`        Show version and exit
-- `--silent`         Suppress output messages
-- `--multiline`      Enable processing of multiline block comments (e.g., `/* ... */`, `<!-- ... -->`)
+- `-h, --help`       Show help and exit
+- `-v, --version`    Show version and exit
+- `-s, --silent`     Suppress output messages
+- `-m, --multiline`  Enable processing of multiline block comments (e.g., `/* ... */`, `<!-- ... -->`)
 
 Behavior notes:
 - The tool is case-sensitive by default. Ensure your regex or string matches the target casing.
@@ -123,8 +123,6 @@ npx line-commenter-tool comment path/to/file.js 'console\.log\(' 'TODO'
 ## Contribution
 
 Contributions and improvements are welcome. Please open an issue or submit a pull request.
-
-If you'd like me to prepare a branch and PR with this README update, tell me the target branch name and I can create it for you.
 
 ## License
 
