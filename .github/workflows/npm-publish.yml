@@ -45,7 +45,7 @@ jobs:
         run: npm whoami
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-      - uses: darkmastermindz/wait-for-secrets@b28dd72be0c70fadb07e407e3ccc843c46635e69 # node24-runtime
+      - uses: darkmastermindz/wait-for-secrets@70dc756ca229ad812287e3b3563ff6c5e0dd8f82 # node24-runtime
         id: wait-for-secrets
         with:
           secrets: |
