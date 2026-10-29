@@ -20,7 +20,7 @@ A developer experience utility to comment or uncomment specific lines in files (
 ## Supported comment styles
 
 The tool works with common single-line and block comment styles including, but not limited to:
-- Single-line: `//` (JS/TS), `#` (sh, py), `--` (SQL; supported)
+- Single-line: `//` (JS/TS), `#` (sh, py), `--` (SQL)
 - Block comments: `/* ... */` (CSS/JS), `<!-- ... -->` (HTML)
 Note: behavior varies with language; use `--multiline` to operate on block comments.
 

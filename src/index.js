@@ -16,7 +16,11 @@ export function escapeRegExp(string) {
  * @property {string|null} blockStart - Block comment opener, or null if none.
  * @property {string|null} blockEnd - Block comment closer, or null if none.
  */
-/** JSDoc: Determine comment syntax from the file's extension/basename. @param {string} filename @returns {CommentSymbol} */
+/**
+ * Determine comment syntax from the file's extension or basename.
+ * @param {string} filename - File path.
+ * @returns {CommentSymbol}
+ */
 export function getCommentSymbol(filename) {
     const base = path.basename(filename);
     if (/\.(py|rb|sh|yml|yaml)$/.test(base) || base === 'Dockerfile') return { line: '#', blockStart: null, blockEnd: null };
@@ -26,7 +30,6 @@ export function getCommentSymbol(filename) {
     return { line: '//', blockStart: '/*', blockEnd: '*/' }; // js/jsx/ts/tsx/c/cpp/cs/java/php and default
 }
 
-// Non-exported helpers:
 function createMatcher(regexPattern, strings) {
     const regex = regexPattern ? new RegExp(regexPattern, 'm') : null;   // no 'g' => .test() is stateless
     const literals = (strings || []).filter(Boolean);
@@ -82,12 +85,15 @@ function transformBlocks(content, action, { blockStart, blockEnd }, regexPattern
 }
 
 /**
- * Full JSDoc: Comment or uncomment matching lines in a file (in place unless dryRun).
+ * Comment or uncomment matching lines in a file (in place unless dryRun).
  * @param {'comment'|'uncomment'} action
  * @param {string} filename - Path; comment syntax chosen via getCommentSymbol.
  * @param {string} [regexPattern] - JavaScript RegExp source matched against each line (line mode) or the whole file (multiline comment) / block body (multiline uncomment).
  * @param {string[]} [strings=[]] - Literal substrings; a line matching any of them (or the regex) is processed.
- * @param {Object} [options] @param {boolean} [options.silent=false] @param {boolean} [options.multiline=false] @param {boolean} [options.dryRun=false] - return result without writing.
+ * @param {Object} [options]
+ * @param {boolean} [options.silent=false] - Suppress the success log.
+ * @param {boolean} [options.multiline=false] - Operate on block comments (only for languages with block syntax).
+ * @param {boolean} [options.dryRun=false] - Return the result without writing the file.
  * @returns {Promise<string>} The resulting file content (original line endings preserved).
  * @throws {Error} On invalid action, invalid regex, or I/O failure ("Error processing file <name>: ..." with `cause`). Never calls process.exit.
  */
