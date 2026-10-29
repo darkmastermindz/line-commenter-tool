@@ -20,7 +20,7 @@ A developer experience utility to comment or uncomment specific lines in files (
 ## Supported comment styles
 
 The tool works with common single-line and block comment styles including, but not limited to:
-- Single-line: `//` (JS/TS), `#` (sh, py), `--` (SQL)
+- Single-line: `//` (JS/TS), `#` (sh, py), `--` (SQL; supported)
 - Block comments: `/* ... */` (CSS/JS), `<!-- ... -->` (HTML)
 Note: behavior varies with language; use `--multiline` to operate on block comments.
 
@@ -45,7 +45,7 @@ line-commenter-tool <action> <filename> <regexPattern> [string1,string2,...] [op
 
 - `<action>`: `comment` or `uncomment`
 - `<filename>`: path to the file to process (relative or absolute)
-- `<regexPattern>`: regex pattern (as a quoted string) used to match lines
+- `<regexPattern>`: literal string used to match lines
 - `[string1,string2,...]` (optional): comma-separated exact strings to match
 
 Options:
@@ -53,6 +53,7 @@ Options:
 - `-v, --version`    Show version and exit
 - `-s, --silent`     Suppress output messages
 - `-m, --multiline`  Enable processing of multiline block comments (e.g., `/* ... */`, `<!-- ... -->`)
+- `--dry-run`        Print the resulting content without writing to the file
 
 Behavior notes:
 - The tool is case-sensitive by default. Ensure your regex or string matches the target casing.
@@ -62,7 +63,7 @@ Behavior notes:
 
 1. Comment all lines containing `console.log` in a JS file:
 ```bash
-line-commenter-tool comment app.js "console\\.log"
+line-commenter-tool comment app.js "console.log"
 ```
 
 2. Uncomment all lines that contain `TODO` in a Python file:
@@ -77,17 +78,26 @@ line-commenter-tool comment config.yml "DEBUG" "error,warning"
 
 4. Uncomment a full multiline block in a CSS file:
 ```bash
-line-commenter-tool uncomment styles.css "/\\*" --multiline
+line-commenter-tool uncomment styles.css "Comment block" --multiline
 ```
 
 5. Use with npx (no install):
 ```bash
-npx line-commenter-tool comment src/index.js "debug\\(" --silent
+npx line-commenter-tool comment src/index.js "debug(" --silent
 ```
 
 Tips:
-- When writing shell commands in examples, escape regex metacharacters appropriately (see examples above).
-- If a pattern contains spaces or shell-special characters, wrap it in single quotes.
+- The CLI matches `<regexPattern>` literally (escaped internally); quote patterns containing spaces or shell-special characters.
+
+## Library usage
+
+```js
+import { processFile } from 'line-commenter-tool';
+
+const result = await processFile('comment', 'app.js', 'console\\.log\\(', [], { dryRun: true });
+```
+
+The JavaScript API treats `regexPattern` as a real RegExp source. With `dryRun: true`, `processFile` returns the resulting content without writing it. Errors are thrown; the library never calls `process.exit`.
 
 ## Integration with Husky
 
@@ -101,7 +111,7 @@ npx husky install
 
 Add a pre-commit hook that runs the tool:
 ```bash
-npx husky add .husky/pre-commit "npx line-commenter-tool comment path/to/file.js 'console\\.log\\(\\)' 'TODO'"
+npx husky add .husky/pre-commit "npx line-commenter-tool comment path/to/file.js 'console.log(' 'TODO'"
 chmod +x .husky/pre-commit
 ```
 
@@ -111,7 +121,7 @@ Example `.husky/pre-commit`:
 . "$(dirname "$0")/_/husky.sh"
 
 # Comment out console.log and TODO lines before commit
-npx line-commenter-tool comment path/to/file.js 'console\.log\(' 'TODO'
+npx line-commenter-tool comment path/to/file.js 'console.log(' 'TODO'
 ```
 
 ## Safety & Best Practices
@@ -120,9 +130,17 @@ npx line-commenter-tool comment path/to/file.js 'console\.log\(' 'TODO'
 - Test your regex patterns on small files or with controlled inputs before running across a codebase.
 - Consider running the command locally with `--silent` disabled to confirm behavior before automating in hooks.
 
+## Limitations
+
+- Uncommenting strips one comment layer per run (`//// x` → `// x`).
+- Matching is whole-line only: a matching line is commented or uncommented as a whole, never as a substring; indentation is preserved.
+- Commenting skips lines already starting with the comment marker.
+- Python triple-quoted strings and docstrings are not detected; matching lines inside them will be commented.
+- HTML/CSS/XML lines are wrapped per line in `<!-- -->` / `/* */`; `--multiline` block detection does not handle nested block comments.
+
 ## Contribution
 
-Contributions and improvements are welcome. Please open an issue or submit a pull request.
+Contributions and improvements are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md), run `npm test`, and please open an issue or submit a pull request.
 
 ## License
 
