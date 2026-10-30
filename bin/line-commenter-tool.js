@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import chalk from 'chalk';
-import processFile from '../src/index.js';
+import processFile, { escapeRegExp } from '../src/index.js';
 import { readFile } from 'fs/promises';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -63,6 +63,7 @@ ${format.usage('Options:')}
                   uncomment entire multiline block comments (e.g., /* ... */, <!-- ... -->) based on a full 
                   match of the regex pattern.
   ${format.option('--dry-run')}        Print the resulting content without writing to the file.
+  ${format.option('--string')}         Match <regexPattern> as an exact literal string instead of a regular expression (metacharacters are escaped).
 
 ${format.usage('Examples:')}
   ${format.example('1.')} ${format.highlight('Comment')} all lines containing the string ${format.argument('console.log')} in a JavaScript file:
@@ -77,9 +78,12 @@ ${format.usage('Examples:')}
   ${format.example('4.')} ${format.highlight('Uncomment')} a full multiline block comment in a CSS file:
      ${format.file("$ line-commenter-tool uncomment styles.css '/\\*' --multiline")}
 
+  ${format.example('5.')} ${format.highlight('Comment')} lines containing a literal string:
+     ${format.file("$ line-commenter-tool comment app.js 'debug(' --string")}
+
 ${format.usage('Notes:')}
   ${format.note('ℹ️')} Patterns are JavaScript RegExp source; quote them in single quotes so the shell doesn't touch backslashes;
-    use the strings argument for exact literal matching.
+    use ${format.option('--string')} or the strings argument for exact literal matching.
   ${format.note('⚠️')} The tool is case-sensitive by default. Ensure your regex patterns and strings match the case of the content
     you want to comment or uncomment.
   ${format.note('💡')} The ${format.option('--multiline')} option is particularly useful for handling languages that use block comments for larger sections
@@ -97,6 +101,7 @@ ${format.usage('Notes:')}
     const silent = args.includes('--silent') || args.includes('-s');
     const multiline = args.includes('--multiline') || args.includes('-m');
     const dryRun = args.includes('--dry-run');
+    const literal = args.includes('--string');
     const filteredArgs = args.filter(arg => !arg.startsWith('-'));
 
     const action = filteredArgs[0];
@@ -111,7 +116,8 @@ ${format.usage('Notes:')}
 
     try {
         const options = { silent, multiline, dryRun };
-        const result = await processFile(action, filename, regexPattern, strings, options);
+        const pattern = literal ? escapeRegExp(regexPattern) : regexPattern;
+        const result = await processFile(action, filename, pattern, strings, options);
         if (dryRun) {
             process.stdout.write(result);
         } else if (!silent) {
