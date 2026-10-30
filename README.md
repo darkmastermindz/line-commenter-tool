@@ -54,7 +54,7 @@ Options:
 - `-s, --silent`     Suppress output messages
 - `-m, --multiline`  Enable processing of multiline block comments (e.g., `/* ... */`, `<!-- ... -->`)
 - `--dry-run`        Print the resulting content without writing to the file
-- `--string`         Match `<regexPattern>` as an exact literal string instead of a regular expression (metacharacters are escaped)
+- `--string, --str`  Match `<regexPattern>` as an exact literal string instead of a regular expression (metacharacters are escaped)
 
 Behavior notes:
 - The tool is case-sensitive by default. Ensure your regex or string matches the target casing.
