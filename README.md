@@ -54,6 +54,7 @@ Options:
 - `-s, --silent`     Suppress output messages
 - `-m, --multiline`  Enable processing of multiline block comments (e.g., `/* ... */`, `<!-- ... -->`)
 - `--dry-run`        Print the resulting content without writing to the file
+- `--string`         Match `<regexPattern>` as an exact literal string instead of a regular expression (metacharacters are escaped)
 
 Behavior notes:
 - The tool is case-sensitive by default. Ensure your regex or string matches the target casing.
@@ -86,8 +87,13 @@ line-commenter-tool uncomment styles.css '/\*' --multiline
 npx line-commenter-tool comment src/index.js 'debug\(' --silent
 ```
 
+6. Comment lines containing the literal string `debug(`:
+```bash
+line-commenter-tool comment app.js 'debug(' --string
+```
+
 Tips:
-- Patterns are JavaScript RegExp source — escape metacharacters (`\.`, `\(`) and wrap them in single quotes; use the comma-separated strings argument for exact literal matches. An invalid regex exits with code 1.
+- Patterns are JavaScript RegExp source — escape metacharacters (`\.`, `\(`) and wrap them in single quotes. Use `--string` or the comma-separated strings argument for exact literal matches. An invalid regex exits with code 1.
 
 ## Library usage
 
