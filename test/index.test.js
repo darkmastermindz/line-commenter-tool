@@ -267,6 +267,12 @@ describe('comment symbols and transformations', () => {
             .toBe('\nComment block start\n* Multiple lines of comments\n* Comment block end\n.class { color: red; }\n');
     });
 
+    test('uncomments a CSS fixture block when the RegExp matches its opener', async () => {
+        const filePath = path.join(testDir, 'testfile.css');
+        expect(await processFile('uncomment', filePath, '/\\*', [], { multiline: true }))
+            .toBe('\nComment block start\n* Multiple lines of comments\n* Comment block end\n.class { color: red; }\n');
+    });
+
     test('does not alter a CSS block that does not match in multiline mode', async () => {
         const filePath = path.join(testDir, 'testfile.css');
         const original = await fs.readFile(filePath, 'utf8');
@@ -364,6 +370,38 @@ describe('CLI dry-run and failures', () => {
         const filePath = await writeScratchFile('js', original);
         const { stdout } = await execFileAsync('node', [binPath, 'comment', filePath, 'value', '--dry-run']);
         expect(stdout).toBe('// const value = 1;\n');
+        expect(await fs.readFile(filePath, 'utf8')).toBe(original);
+    });
+
+    test('CLI applies regex patterns without escaping them again', async () => {
+        const filePath = await writeScratchFile('js', "console.log('a');\nconsoleXlog('b');\n");
+        await execFileAsync('node', [binPath, 'comment', filePath, 'console\\.log']);
+        expect(await fs.readFile(filePath, 'utf8')).toBe("// console.log('a');\nconsoleXlog('b');\n");
+    });
+
+    test('CLI supports regex character classes', async () => {
+        const filePath = await writeScratchFile('js', 'Line 1\nLine 2\nLine 3\n');
+        await execFileAsync('node', [binPath, 'comment', filePath, 'Line [13]']);
+        expect(await fs.readFile(filePath, 'utf8')).toBe('// Line 1\nLine 2\n// Line 3\n');
+    });
+
+    test('CLI matches a multiline block opener when uncommenting', async () => {
+        const filePath = await writeScratchFile('css', '/* a */\n.b {}\n');
+        await execFileAsync('node', [binPath, 'uncomment', filePath, '/\\*', '--multiline']);
+        expect(await fs.readFile(filePath, 'utf8')).toBe('a\n.b {}\n');
+    });
+
+    test('CLI rejects invalid regex patterns without changing the file', async () => {
+        const original = 'const value = 1;\n';
+        const filePath = await writeScratchFile('js', original);
+        let error;
+        try {
+            await execFileAsync('node', [binPath, 'comment', filePath, '(']);
+        } catch (caught) {
+            error = caught;
+        }
+        expect(error.code).toBe(1);
+        expect(error.stderr).toMatch(/Error processing file .*Invalid regular expression/);
         expect(await fs.readFile(filePath, 'utf8')).toBe(original);
     });
 });
