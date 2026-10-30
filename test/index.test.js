@@ -201,6 +201,7 @@ describe('CLI flag tests', () => {
         expect(stdout).toMatch(/-s, --silent/);
         expect(stdout).toMatch(/-m, --multiline/);
         expect(stdout).toMatch(/--string/);
+        expect(stdout).toMatch(/--str/);
     });
 
     test('-h flag prints usage and exits', async () => {
@@ -410,6 +411,12 @@ describe('CLI dry-run and failures', () => {
         const filePath = await writeScratchFile('js', 'debug(1);\ndebugX(2);\n');
         const { stderr } = await execFileAsync('node', [binPath, 'comment', filePath, 'debug(', '--string']);
         expect(stderr).toBe('');
+        expect(await fs.readFile(filePath, 'utf8')).toBe('// debug(1);\ndebugX(2);\n');
+    });
+
+    test('CLI --str aliases --string', async () => {
+        const filePath = await writeScratchFile('js', 'debug(1);\ndebugX(2);\n');
+        await execFileAsync('node', [binPath, 'comment', filePath, 'debug(', '--str']);
         expect(await fs.readFile(filePath, 'utf8')).toBe('// debug(1);\ndebugX(2);\n');
     });
 

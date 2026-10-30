@@ -63,7 +63,7 @@ ${format.usage('Options:')}
                   uncomment entire multiline block comments (e.g., /* ... */, <!-- ... -->) based on a full 
                   match of the regex pattern.
   ${format.option('--dry-run')}        Print the resulting content without writing to the file.
-  ${format.option('--string')}         Match <regexPattern> as an exact literal string instead of a regular expression (metacharacters are escaped).
+  ${format.option('--string, --str')}  Match <regexPattern> as an exact literal string instead of a regular expression (metacharacters are escaped).
 
 ${format.usage('Examples:')}
   ${format.example('1.')} ${format.highlight('Comment')} all lines containing the string ${format.argument('console.log')} in a JavaScript file:
@@ -101,7 +101,7 @@ ${format.usage('Notes:')}
     const silent = args.includes('--silent') || args.includes('-s');
     const multiline = args.includes('--multiline') || args.includes('-m');
     const dryRun = args.includes('--dry-run');
-    const literal = args.includes('--string');
+    const literal = args.includes('--string') || args.includes('--str');
     const filteredArgs = args.filter(arg => !arg.startsWith('-'));
 
     const action = filteredArgs[0];
