@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import chalk from 'chalk';
-import processFile, { escapeRegExp } from '../src/index.js';
+import processFile from '../src/index.js';
 import { readFile } from 'fs/promises';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -51,7 +51,7 @@ ${format.usage('Actions:')}
 ${format.usage('Arguments:')}
   ${format.argument('<action>')}          The action to perform: ${format.highlight('comment')} or ${format.highlight('uncomment')}.
   ${format.argument('<filename>')}        The file to process.
-  ${format.argument('<regexPattern>')}    A literal string to identify lines to be commented or uncommented.
+  ${format.argument('<regexPattern>')}    A JavaScript regular expression to identify lines to be commented or uncommented.
   ${format.argument('[string1,string2,...]')} ${format.option('(Optional)')} A comma-separated list of strings to be matched exactly.
 
 ${format.usage('Options:')}
@@ -66,19 +66,20 @@ ${format.usage('Options:')}
 
 ${format.usage('Examples:')}
   ${format.example('1.')} ${format.highlight('Comment')} all lines containing the string ${format.argument('console.log')} in a JavaScript file:
-     ${format.file('$ line-commenter-tool comment app.js "console.log"')}
+     ${format.file("$ line-commenter-tool comment app.js 'console\\.log'")}
 
   ${format.example('2.')} ${format.highlight('Uncomment')} all lines that match the regex pattern ${format.argument('TODO')} in a Python file:
      ${format.file('$ line-commenter-tool uncomment script.py "TODO"')}
 
   ${format.example('3.')} ${format.highlight('Comment')} specific lines in a file using multiple strings:
-     ${format.file('$ line-commenter-tool comment config.yml "DEBUG" "error,warning"')}
+     ${format.file("$ line-commenter-tool comment config.yml 'DEBUG' 'error,warning'")}
 
   ${format.example('4.')} ${format.highlight('Uncomment')} a full multiline block comment in a CSS file:
-     ${format.file('$ line-commenter-tool uncomment styles.css "Comment block" --multiline')}
+     ${format.file("$ line-commenter-tool uncomment styles.css '/\\*' --multiline")}
 
 ${format.usage('Notes:')}
-  ${format.note('ℹ️')} The CLI treats ${format.argument('<regexPattern>')} as a literal string (metacharacters are escaped); use the JS API for real regular expressions.
+  ${format.note('ℹ️')} Patterns are JavaScript RegExp source; quote them in single quotes so the shell doesn't touch backslashes;
+    use the strings argument for exact literal matching.
   ${format.note('⚠️')} The tool is case-sensitive by default. Ensure your regex patterns and strings match the case of the content
     you want to comment or uncomment.
   ${format.note('💡')} The ${format.option('--multiline')} option is particularly useful for handling languages that use block comments for larger sections
@@ -110,8 +111,7 @@ ${format.usage('Notes:')}
 
     try {
         const options = { silent, multiline, dryRun };
-        const sanitizedRegexPattern = escapeRegExp(regexPattern);
-        const result = await processFile(action, filename, sanitizedRegexPattern, strings, options);
+        const result = await processFile(action, filename, regexPattern, strings, options);
         if (dryRun) {
             process.stdout.write(result);
         } else if (!silent) {

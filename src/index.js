@@ -59,7 +59,7 @@ function transformBlocks(content, action, { blockStart, blockEnd }, regexPattern
     if (action === 'uncomment') {
         const matches = createMatcher(regexPattern, strings);
         const blockRe = new RegExp(`^([ \\t]*)${escapeRegExp(blockStart)}[ \\t]?([\\s\\S]*?)[ \\t]?${escapeRegExp(blockEnd)}`, 'gm'); // compiled once
-        return content.replace(blockRe, (match, indent, inner) => (matches(inner) ? `${indent}${inner}` : match));
+        return content.replace(blockRe, (match, indent, inner) => (matches(match) ? `${indent}${inner}` : match));
     }
     // comment: each regex/string match (may span lines) is expanded to whole lines and wrapped in ONE block
     const sources = [regexPattern, ...(strings || []).filter(Boolean).map(escapeRegExp)].filter(Boolean);
