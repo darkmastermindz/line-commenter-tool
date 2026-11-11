@@ -51,7 +51,7 @@ ${format.usage('Actions:')}
 ${format.usage('Arguments:')}
   ${format.argument('<action>')}          The action to perform: ${format.highlight('comment')} or ${format.highlight('uncomment')}.
   ${format.argument('<filename>')}        The file to process.
-  ${format.argument('<regexPattern>')}    A regex pattern to identify lines to be commented or uncommented.
+  ${format.argument('<regexPattern>')}    A JavaScript regular expression to identify lines to be commented or uncommented.
   ${format.argument('[string1,string2,...]')} ${format.option('(Optional)')} A comma-separated list of strings to be matched exactly.
 
 ${format.usage('Options:')}
@@ -62,21 +62,28 @@ ${format.usage('Options:')}
   ${format.option('-m, --multiline')}  Enable processing of multiline comments. When this flag is used, the tool will comment or
                   uncomment entire multiline block comments (e.g., /* ... */, <!-- ... -->) based on a full 
                   match of the regex pattern.
+  ${format.option('--dry-run')}        Print the resulting content without writing to the file.
+  ${format.option('--string, --str')}  Match <regexPattern> as an exact literal string instead of a regular expression (metacharacters are escaped).
 
 ${format.usage('Examples:')}
   ${format.example('1.')} ${format.highlight('Comment')} all lines containing the string ${format.argument('console.log')} in a JavaScript file:
-     ${format.file('$ line-commenter-tool comment app.js "console\\.log"')}
+     ${format.file("$ line-commenter-tool comment app.js 'console\\.log'")}
 
   ${format.example('2.')} ${format.highlight('Uncomment')} all lines that match the regex pattern ${format.argument('TODO')} in a Python file:
      ${format.file('$ line-commenter-tool uncomment script.py "TODO"')}
 
   ${format.example('3.')} ${format.highlight('Comment')} specific lines in a file using multiple strings:
-     ${format.file('$ line-commenter-tool comment config.yml "DEBUG" "error,warning"')}
+     ${format.file("$ line-commenter-tool comment config.yml 'DEBUG' 'error,warning'")}
 
   ${format.example('4.')} ${format.highlight('Uncomment')} a full multiline block comment in a CSS file:
-     ${format.file('$ line-commenter-tool uncomment styles.css "/*" --multiline')}
+     ${format.file("$ line-commenter-tool uncomment styles.css '/\\*' --multiline")}
+
+  ${format.example('5.')} ${format.highlight('Comment')} lines containing a literal string:
+     ${format.file("$ line-commenter-tool comment app.js 'debug(' --string")}
 
 ${format.usage('Notes:')}
+  ${format.note('ℹ️')} Patterns are JavaScript RegExp source; quote them in single quotes so the shell doesn't touch backslashes;
+    use ${format.option('--string')} or the strings argument for exact literal matching.
   ${format.note('⚠️')} The tool is case-sensitive by default. Ensure your regex patterns and strings match the case of the content
     you want to comment or uncomment.
   ${format.note('💡')} The ${format.option('--multiline')} option is particularly useful for handling languages that use block comments for larger sections
@@ -93,6 +100,8 @@ ${format.usage('Notes:')}
 
     const silent = args.includes('--silent') || args.includes('-s');
     const multiline = args.includes('--multiline') || args.includes('-m');
+    const dryRun = args.includes('--dry-run');
+    const literal = args.includes('--string') || args.includes('--str');
     const filteredArgs = args.filter(arg => !arg.startsWith('-'));
 
     const action = filteredArgs[0];
@@ -106,10 +115,12 @@ ${format.usage('Notes:')}
     }
 
     try {
-        const options = { silent, multiline };
-        const sanitizedRegexPattern = escapeRegExp(regexPattern);
-        await processFile(action, filename, sanitizedRegexPattern, strings, options);
-        if (!silent) {
+        const options = { silent, multiline, dryRun };
+        const pattern = literal ? escapeRegExp(regexPattern) : regexPattern;
+        const result = await processFile(action, filename, pattern, strings, options);
+        if (dryRun) {
+            process.stdout.write(result);
+        } else if (!silent) {
             console.log(format.success(filename));
         }
     } catch (error) {
