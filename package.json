@@ -34,7 +34,7 @@
     "url": "https://github.com/darkmastermindz/line-commenter-tool.git"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.2",
+    "@babel/core": "^8.0.9",
     "@babel/preset-env": "^7.25.3",
     "babel-jest": "^30.0.4",
     "jest": "^30.0.4"
